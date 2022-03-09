@@ -25,6 +25,7 @@
 #include "usart.h"
 #include "tim.h"
 #include "gpio.h"
+#include "ES_CAN.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -48,7 +49,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+volatile uint8_t TX_Message[8] = {0};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -91,7 +92,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_CAN1_Init();
+  // MX_CAN1_Init();
   MX_DAC1_Init();
   MX_ADC1_Init();
   MX_I2C1_Init();
@@ -102,6 +103,11 @@ int main(void)
   HAL_Delay(1000);
   init_lcd();
   DEBUG_PRINT("Hello World!");  
+
+  CAN_INIT(true);
+  setCANFilter(0x123, 0x7ff);
+  CAN_Start();
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -115,7 +121,18 @@ int main(void)
     HAL_Delay(1000);
     HAL_GPIO_TogglePin(GPIOB, LED_BUILTIN_Pin);
 
-    update_lcd();
+    CAN_TX(0x123, TX_Message);
+
+    // hacky place to put CAN vars for now
+    uint32_t CAN_RX_ID;
+    uint8_t CAN_RX_DATA;
+
+    while(CAN_CheckRXLevel()){
+      CAN_RX(CAN_RX_ID, CAN_RX_DATA);
+      DEBUG_PRINT(CAN_RX_ID);
+      update_lcd(CAN_RX_DATA);
+    }
+
   }
   /* USER CODE END 3 */
 }

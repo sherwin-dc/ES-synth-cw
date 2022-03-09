@@ -135,5 +135,11 @@ extern "C" void update_lcd() {
   u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);
   u8g2_DrawStr(&u8g2, 2, 10,"Helllo World!");  // write something to the internal memory
   u8g2_SendBuffer(&u8g2);
+}
 
+extern "C" void update_lcd(const char* message) {
+  u8g2_ClearBuffer(&u8g2);
+  u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);
+  u8g2_DrawStr(&u8g2, 2, 10, message);  // write something to the internal memory
+  u8g2_SendBuffer(&u8g2);
 }
