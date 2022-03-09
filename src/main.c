@@ -27,6 +27,10 @@
 #include "tim.h"
 #include "gpio.h"
 
+#include "sawtooth.h"
+#include "delay.h"
+#include "keymat.h"
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -47,7 +51,6 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -56,7 +59,6 @@
 void SystemClock_Config(void);
 void MX_FREERTOS_Init(void);
 /* USER CODE BEGIN PFP */
-
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -135,7 +137,9 @@ int main(void)
   
 
   /* USER CODE END 3 */
+  
 }
+
 
 /**
   * @brief System Clock Configuration

@@ -15,7 +15,7 @@ extern "C" void sampleISR(){
     int32_t Vout = phaseAcc >> 24;
 
 
-    DEBUG_PRINT("hello world");
+    // DEBUG_PRINT("hello world");
 
     //HAL_DAC_SetValue(GPIOA,DAC_CHANNEL_1,GPIO_PIN_4,);
     //HAL_DAC_SetValue(&hdac1,DAC_CHANNEL_1,DAC_ALIGN_8B_R,Vout + 128);
