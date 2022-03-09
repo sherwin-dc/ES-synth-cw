@@ -2,6 +2,7 @@
 #include "i2c.h"
 #include "keymat.h"
 #include "delay.h"
+#include <string>
 
 u8g2_t u8g2;
 
@@ -130,10 +131,11 @@ extern "C" void init_lcd() {
   u8g2_SetPowerSave(&u8g2, 0); // wake up display
 }
 
-extern "C" void update_lcd() {
+extern "C" void update_lcd(char* keys) {
   u8g2_ClearBuffer(&u8g2);
   u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);
-  u8g2_DrawStr(&u8g2, 2, 10,"Helllo World!");  // write something to the internal memory
+  u8g2_DrawStr(&u8g2, 2, 10,keys);  // write something to the internal memory
+  //u8g2_DrawStr(&u8g2, 2, 10,"Helllo World!");  // write something to the internal memory
   u8g2_SendBuffer(&u8g2);
 
 }

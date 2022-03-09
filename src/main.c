@@ -25,6 +25,9 @@
 #include "usart.h"
 #include "tim.h"
 #include "gpio.h"
+//#include "sawtooth.h"
+//#include "delay.h"
+//#include "keymat.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -46,7 +49,6 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -54,8 +56,11 @@
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-extern void update_lcd();
+extern void update_lcd(char* keys);
 extern void init_lcd();
+extern void setRow(uint8_t rowIdx);
+extern uint8_t readCols();
+extern void sampleISR();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -102,6 +107,10 @@ int main(void)
   HAL_Delay(1000);
   init_lcd();
   DEBUG_PRINT("Hello World!");  
+
+  // Initialise the DAC for 
+  HAL_DAC_Start(&hdac1,DAC_CHANNEL_1);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -112,13 +121,34 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    HAL_Delay(1000);
-    HAL_GPIO_TogglePin(GPIOB, LED_BUILTIN_Pin);
+    HAL_Delay(10);
+    //HAL_GPIO_TogglePin(GPIOB, LED_BUILTIN_Pin);
 
-    update_lcd();
-  }
+
+
+    //Testing keypresses
+    char keyPressed [28];
+
+    for(int i = 0; i <= 7; i++){
+      setRow(i);
+      //delay_microsecond(3);
+      HAL_Delay(1);
+      uint8_t keys = readCols();
+      keyPressed[i*4] = keys & (uint8_t)(1) ? 49 : 48;
+      keyPressed[i*4+1] = keys & (uint8_t)(2) ? 49 : 48;
+      keyPressed[i*4+2] = keys & (uint8_t)(4) ? 49 : 48;
+      keyPressed[i*4+3] = keys & (uint8_t)(8) ? 49 : 48;
+
+    }
+
+    update_lcd(keyPressed);
+
+    sampleISR();
+
   /* USER CODE END 3 */
+  }
 }
+
 
 /**
   * @brief System Clock Configuration
