@@ -4,7 +4,7 @@
 #include "task.h"
 #include "keymat.h"
 
-QueueHandle_t boardkeys = xQueueCreate(1, sizeof(boardkeys_t));
+QueueHandle_t boardkeys; 
 
 extern "C" void setOutMuxBit(const uint8_t bitIdx, const int value) {
       HAL_GPIO_WritePin(Row_Sel_En_GPIO_Port, Row_Sel_En_Pin, GPIO_PIN_RESET);
@@ -82,6 +82,7 @@ void keydetect(void * params) {
 }
 
 extern "C" void init_keydetect() {
+  boardkeys = xQueueCreate(1, sizeof(boardkeys_t));
   DEBUG_PRINT("Initialising Detect Keys");
   if (xTaskCreate(keydetect, "Detect keys", 64, NULL, 5, NULL) != pdPASS) {
     DEBUG_PRINT("ERROR")

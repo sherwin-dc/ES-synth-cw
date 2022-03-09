@@ -91,7 +91,7 @@ void MX_FREERTOS_Init(void) {
   /* add queues, ... */
 
   // IMPORTANT: UNCOMMENT THE NEXT LINE OF CODE USING osThreadNew
-  // #define osThreadNew(a,b,c) NULL
+  #define osThreadNew(a,b,c) NULL
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
