@@ -25,9 +25,10 @@
 #include "usart.h"
 #include "tim.h"
 #include "gpio.h"
-//#include "sawtooth.h"
-//#include "delay.h"
-//#include "keymat.h"
+
+#include "sawtooth.h"
+#include "delay.h"
+#include "keymat.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -58,9 +59,6 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 extern void update_lcd(char* keys);
 extern void init_lcd();
-extern void setRow(uint8_t rowIdx);
-extern uint8_t readCols();
-extern void sampleISR();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -121,11 +119,12 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    HAL_Delay(10);
+   // HAL_Delay(10);
     //HAL_GPIO_TogglePin(GPIOB, LED_BUILTIN_Pin);
+    delay_microseconds(45);
 
 
-
+  /*
     //Testing keypresses
     char keyPressed [28];
 
@@ -141,7 +140,7 @@ int main(void)
 
     }
 
-    update_lcd(keyPressed);
+    update_lcd(keyPressed);*/
 
     sampleISR();
 
