@@ -1,4 +1,4 @@
-/* USER CODE BEGIN Header */
+#/* USER CODE BEGIN Header */
 /**
   ******************************************************************************
   * @file           : main.c
@@ -25,6 +25,7 @@
 #include "usart.h"
 #include "tim.h"
 #include "gpio.h"
+#include "ES_CAN.hpp"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
