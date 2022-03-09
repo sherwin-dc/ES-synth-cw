@@ -3,6 +3,8 @@
 #include "keymat.h"
 #include "delay.h"
 #include "task.h"
+#include <string>
+#include "keymat.h"
 
 u8g2_t u8g2;
 
@@ -123,9 +125,13 @@ void update_lcd(void * params) {
 
   while (1) {
 
+    // Read key presses
+    boardkeys_t keys;
+    xQueuePeek(boardkeys, &keys, 0);
+
     u8g2_ClearBuffer(&u8g2);
     u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);
-    u8g2_DrawStr(&u8g2, 2, 10,"Helllo World!");  // write something to the internal memory
+    u8g2_DrawStr(&u8g2, 2, 10, keys);  // write something to the internal memory
     u8g2_SendBuffer(&u8g2);
 
     // Toggle MCU LED
@@ -150,6 +156,7 @@ extern "C" void init_lcd() {
   u8g2_InitDisplay(&u8g2); // send init sequence to the display, display is in sleep mode after this,
   u8g2_SetPowerSave(&u8g2, 0); // wake up display
 
+  DEBUG_PRINT("Initialising Refresh LCD");
   if (xTaskCreate(update_lcd, "Refresh LCD", 128, &myint, 5, NULL) != pdPASS ) {
     DEBUG_PRINT("Error. Free memory: ");
     print(xPortGetFreeHeapSize());
