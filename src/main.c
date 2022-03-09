@@ -105,7 +105,7 @@ int main(void)
   DEBUG_PRINT("Hello World!");  
 
   CAN_INIT(true);
-  setCANFilter(0x123, 0x7ff);
+  setCANFilter(0x123, 0x7ff, 0);
   CAN_Start();
 
   /* USER CODE END 2 */
