@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "cmsis_os.h"
 #include "adc.h"
 #include "can.h"
 #include "dac.h"
@@ -25,6 +26,7 @@
 #include "usart.h"
 #include "tim.h"
 #include "gpio.h"
+#include "delay.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -53,8 +55,9 @@
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+void MX_FREERTOS_Init(void);
 /* USER CODE BEGIN PFP */
-extern void update_lcd();
+
 extern void init_lcd();
 /* USER CODE END PFP */
 
@@ -100,23 +103,20 @@ int main(void)
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start(&htim1); // Start TIM1
   HAL_Delay(1000);
-  init_lcd();
-  DEBUG_PRINT("Hello World!");  
+
+ 
   /* USER CODE END 2 */
 
+  /* Init scheduler */
+  osKernelInitialize();  /* Call init function for freertos objects (in freertos.c) */
+  MX_FREERTOS_Init();
+  /* Start scheduler */
+  osKernelStart();
+
+  /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  
-  while (1)
-  {
-    /* USER CODE END WHILE */
 
-    /* USER CODE BEGIN 3 */
-    HAL_Delay(1000);
-    HAL_GPIO_TogglePin(GPIOB, LED_BUILTIN_Pin);
-
-    update_lcd();
-  }
   /* USER CODE END 3 */
 }
 

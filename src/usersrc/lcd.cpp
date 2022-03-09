@@ -2,6 +2,7 @@
 #include "i2c.h"
 #include "keymat.h"
 #include "delay.h"
+#include "task.h"
 
 u8g2_t u8g2;
 
@@ -116,6 +117,27 @@ uint8_t u8x8_gpio_and_delay(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *ar
   return 1;
 }
 
+
+
+void update_lcd(void * params) {
+
+  while (1) {
+
+    u8g2_ClearBuffer(&u8g2);
+    u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);
+    u8g2_DrawStr(&u8g2, 2, 10,"Helllo World!");  // write something to the internal memory
+    u8g2_SendBuffer(&u8g2);
+
+    // Toggle MCU LED
+    HAL_GPIO_TogglePin(GPIOB, LED_BUILTIN_Pin);
+
+    vTaskDelay( pdMS_TO_TICKS(100) );
+  }
+
+}
+
+int myint;
+
 extern "C" void init_lcd() {
   u8g2_Setup_ssd1305_i2c_128x32_noname_f(&u8g2, U8G2_R0, u8x8_byte_hw_i2c, u8x8_gpio_and_delay);
 
@@ -125,15 +147,12 @@ extern "C" void init_lcd() {
   setOutMuxBit(4, true);  //Release display logic reset
   setOutMuxBit(3, true);  //Enable display power supply
 
-  
   u8g2_InitDisplay(&u8g2); // send init sequence to the display, display is in sleep mode after this,
   u8g2_SetPowerSave(&u8g2, 0); // wake up display
-}
 
-extern "C" void update_lcd() {
-  u8g2_ClearBuffer(&u8g2);
-  u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);
-  u8g2_DrawStr(&u8g2, 2, 10,"Helllo World!");  // write something to the internal memory
-  u8g2_SendBuffer(&u8g2);
+  if (xTaskCreate(update_lcd, "Refresh LCD", 128, &myint, 5, NULL) != pdPASS ) {
+    DEBUG_PRINT("Error. Free memory: ");
+    print(xPortGetFreeHeapSize());
+  }
 
 }
