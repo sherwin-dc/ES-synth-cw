@@ -57,7 +57,6 @@ void SystemClock_Config(void);
 void MX_FREERTOS_Init(void);
 /* USER CODE BEGIN PFP */
 
-extern void init_lcd();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -101,11 +100,18 @@ int main(void)
   MX_TIM1_Init();
   MX_TIM7_Init();
   /* USER CODE BEGIN 2 */
-  HAL_TIM_Base_Start(&htim1); // Start TIM1
-  HAL_TIM_Base_Start_IT(&htim7);
-  HAL_Delay(1000);
+  // HAL_TIM_Base_Start(&htim1); // Start TIM1
+  // HAL_TIM_Base_Start_IT(&htim7);
+  // // Initialise the DAC for 
+  // HAL_DAC_Start(&hdac1,DAC_CHANNEL_1);
 
- 
+
+  DEBUG_PRINT("HELLO WORLD");
+  
+  
+
+
+  
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -117,12 +123,15 @@ int main(void)
   /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-  }
+  
+
+
+  
+
   /* USER CODE END 3 */
 }
 
@@ -187,6 +196,7 @@ void Error_Handler(void)
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
   __disable_irq();
+  DEBUG_PRINT("ERROR");
   while (1)
   {
   }

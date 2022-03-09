@@ -1,7 +1,12 @@
 #include "gpio.h"
 #include "delay.h"
+#include "FreeRTOS.h"
+#include "task.h"
+#include "keymat.h"
 
-extern "C" void setOutMuxBit(const uint8_t bitIdx, const bool value) {
+QueueHandle_t boardkeys = xQueueCreate(1, sizeof(boardkeys_t));
+
+extern "C" void setOutMuxBit(const uint8_t bitIdx, const int value) {
       HAL_GPIO_WritePin(Row_Sel_En_GPIO_Port, Row_Sel_En_Pin, GPIO_PIN_RESET);
       HAL_GPIO_WritePin(Row_Sel_0_GPIO_Port, Row_Sel_0_Pin, (bitIdx & 0x01) > 0 ? GPIO_PIN_SET : GPIO_PIN_RESET);
       HAL_GPIO_WritePin(Row_Sel_1_GPIO_Port, Row_Sel_1_Pin, (bitIdx & 0x02) > 0 ? GPIO_PIN_SET : GPIO_PIN_RESET);
@@ -51,4 +56,34 @@ extern "C" void setRow(uint8_t rowIdx) {
       HAL_GPIO_WritePin(Row_Sel_2_GPIO_Port, Row_Sel_2_Pin, (rowIdx & 0x04) > 0 ? GPIO_PIN_SET : GPIO_PIN_RESET);
       HAL_GPIO_WritePin(Row_Sel_En_GPIO_Port, Row_Sel_En_Pin, GPIO_PIN_SET);
 
+}
+
+void keydetect(void * params) {
+  while (1) {
+    //Testing keypresses
+    boardkeys_t keyPressed;
+
+    for(int i = 0; i <= 7; i++){
+      setRow(i);
+      //delay_microsecond(3);
+      HAL_Delay(1);
+      uint8_t keys = readCols();
+      keyPressed[i*4] = keys & (uint8_t)(1) ? 49 : 48;
+      keyPressed[i*4+1] = keys & (uint8_t)(2) ? 49 : 48;
+      keyPressed[i*4+2] = keys & (uint8_t)(4) ? 49 : 48;
+      keyPressed[i*4+3] = keys & (uint8_t)(8) ? 49 : 48;
+
+    }
+
+    xQueueOverwrite(boardkeys, &keyPressed);
+
+    vTaskDelay( pdMS_TO_TICKS(100) );
+  }
+}
+
+extern "C" void init_keydetect() {
+  DEBUG_PRINT("Initialising Detect Keys");
+  if (xTaskCreate(keydetect, "Detect keys", 64, NULL, 5, NULL) != pdPASS) {
+    DEBUG_PRINT("ERROR")
+  }
 }

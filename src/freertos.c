@@ -36,6 +36,7 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 extern void init_lcd();
+extern void init_keydetect();
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -90,6 +91,7 @@ void MX_FREERTOS_Init(void) {
   /* add queues, ... */
 
   // IMPORTANT: UNCOMMENT THE NEXT LINE OF CODE USING osThreadNew
+  // #define osThreadNew(a,b,c) NULL
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
@@ -98,7 +100,9 @@ void MX_FREERTOS_Init(void) {
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
+  DEBUG_PRINT("A")
   init_lcd();
+  init_keydetect();
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */
