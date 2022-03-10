@@ -123,6 +123,7 @@ uint8_t u8x8_gpio_and_delay(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *ar
 
 void update_lcd(void * params) {
 
+  /* TODO:
   while (1) {
 
     // Read key presses
@@ -139,6 +140,7 @@ void update_lcd(void * params) {
 
     vTaskDelay( pdMS_TO_TICKS(100) );
   }
+  */
 
 }
 
