@@ -168,6 +168,7 @@ void init_lcd() {
   for (int i=0; i<LCD_LENGTH; i++){
     lcd_init[i] = ' ';
   }
+  lcd_init[LCD_LENGTH-1] = '\0';
   xQueueOverwrite(lcdQueue, &lcd_init);
 
 }
