@@ -27,9 +27,11 @@
 #include "tim.h"
 #include "gpio.h"
 
+#include "lcd.h"
 #include "sawtooth.h"
 #include "delay.h"
 #include "keymat.h"
+#include "joystick.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */

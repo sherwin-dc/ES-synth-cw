@@ -1,12 +1,8 @@
-#include "u8g2.h"
-#include "i2c.h"
-#include "keymat.h"
-#include "delay.h"
-#include "task.h"
 #include <string>
-#include "keymat.h"
+#include "lcd.h"
 
 u8g2_t u8g2;
+ QueueHandle_t lcdQueue;
 
 uint8_t u8x8_byte_hw_i2c(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *arg_ptr) {
   static uint8_t buffer[32];		/* u8g2/u8x8 will never send more than 32 bytes between START_TRANSFER and END_TRANSFER */
@@ -123,16 +119,15 @@ uint8_t u8x8_gpio_and_delay(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *ar
 
 void update_lcd(void * params) {
 
-  /* TODO:
   while (1) {
 
     // Read key presses
-    boardkeys_t keys;
-    xQueuePeek(boardkeys, &keys, 0);
+    lcd_t queue;
+    xQueuePeek(lcdQueue, &queue, 0);
 
     u8g2_ClearBuffer(&u8g2);
     u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);
-    u8g2_DrawStr(&u8g2, 2, 10, keys);  // write something to the internal memory
+    u8g2_DrawStr(&u8g2, 2, 10, queue);  // write something to the internal memory
     u8g2_SendBuffer(&u8g2);
 
     // Toggle MCU LED
@@ -140,13 +135,12 @@ void update_lcd(void * params) {
 
     vTaskDelay( pdMS_TO_TICKS(100) );
   }
-  */
 
 }
 
 int myint;
 
-extern "C" void init_lcd() {
+void init_lcd() {
   u8g2_Setup_ssd1305_i2c_128x32_noname_f(&u8g2, U8G2_R0, u8x8_byte_hw_i2c, u8x8_gpio_and_delay);
 
   //Initialise display

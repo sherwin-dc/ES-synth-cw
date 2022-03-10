@@ -60,6 +60,7 @@ void setRow(uint8_t rowIdx) {
 // increment boardknobs according to rotation
 // no overflow implemented
 // shall this be incrementing or boolean?
+// just a function or a class?
 void knobDecode(uint8_t* newKeys) {
       boardkeys_t keys;
       xQueuePeek(boardkeys, &keys, 0);
