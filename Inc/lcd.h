@@ -5,13 +5,15 @@
 #include "task.h"
 #include "keymat.h"
 
+#define LCD_LENGTH 20
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 extern u8g2_t u8g2;
 
-typedef char lcd_t[20];
+typedef char lcd_t[LCD_LENGTH];
 extern QueueHandle_t lcdQueue;
 
 uint8_t u8x8_byte_hw_i2c(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *arg_ptr);
