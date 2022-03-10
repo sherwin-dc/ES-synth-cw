@@ -111,6 +111,9 @@ void knobDecode(uint8_t* newKeys) {
 
 // main function that scan keys
 void scanKeysTask(void * params) {
+      const TickType_t xFrequency = 50/portTICK_PERIOD_MS;
+      TickType_t xLastWakeTime = xTaskGetTickCount();
+
       while (1) {
             //Testing keypresses
             boardkeys_t keyPressed;
@@ -142,7 +145,7 @@ void scanKeysTask(void * params) {
 
             xQueueOverwrite(boardkeys, &keyPressed);
 
-            vTaskDelay( pdMS_TO_TICKS(100) );
+            vTaskDelayUntil( &xLastWakeTime, xFrequency );
       }
 }
 

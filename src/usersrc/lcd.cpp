@@ -119,6 +119,9 @@ uint8_t u8x8_gpio_and_delay(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *ar
 
 void update_lcd(void * params) {
 
+  const TickType_t xFrequency = 100/portTICK_PERIOD_MS;
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+
   while (1) {
     START_TIMING
 
@@ -136,7 +139,7 @@ void update_lcd(void * params) {
 
     END_TIMING
 
-    vTaskDelay( pdMS_TO_TICKS(100) );
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }
 
 }
@@ -156,7 +159,7 @@ void init_lcd() {
   u8g2_SetPowerSave(&u8g2, 0); // wake up display
 
   DEBUG_PRINT("Initialising Refresh LCD");
-  if (xTaskCreate(update_lcd, "Refresh LCD", 128, &myint, 5, NULL) != pdPASS ) {
+  if (xTaskCreate(update_lcd, "Refresh LCD", 128, &myint, 4, NULL) != pdPASS ) {
     DEBUG_PRINT("Error. Free memory: ");
     print(xPortGetFreeHeapSize());
   }
