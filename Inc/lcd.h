@@ -22,6 +22,35 @@ uint8_t u8x8_gpio_and_delay(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *ar
 void update_lcd(void * params);
 void init_lcd();
 
+
+
+#define W_KEY_WIDTH 7
+#define W_KEY_STRIDE (W_KEY_WIDTH-1)
+#define W_KEY_HEIGHT 20
+#define KEYBOARD_START_X 2
+#define KEYBOARD_START_Y 5
+#define B_KEY_Y (KEYBOARD_START_Y+4)
+#define B_KEY_WIDTH 5
+#define B_KEY_HEIGHT 7
+#define B_KEY_START_X (KEYBOARD_START_X+4)
+#define W_KEY_PRESS_Y (KEYBOARD_START_Y+W_KEY_HEIGHT-3)
+#define B_KEY_PRESS_Y (B_KEY_Y+B_KEY_HEIGHT-2)
+#define KEY_PRES_RAD 1
+
+#define DRAW_WHITE_KEY(X) \
+u8g2_DrawFrame(&u8g2, KEYBOARD_START_X + X * W_KEY_STRIDE, KEYBOARD_START_Y, W_KEY_WIDTH, W_KEY_HEIGHT);
+
+#define DRAW_BLACK_KEY(X) \
+u8g2_DrawBox(&u8g2, B_KEY_START_X + X * W_KEY_STRIDE, B_KEY_Y, B_KEY_WIDTH, B_KEY_HEIGHT);
+
+#define DRAW_WHITE_PRESS(X) \
+u8g2_DrawFilledEllipse(&u8g2, KEYBOARD_START_X + X * W_KEY_STRIDE + W_KEY_WIDTH/2, \
+  W_KEY_PRESS_Y, KEY_PRES_RAD, KEY_PRES_RAD, U8G2_DRAW_UPPER_RIGHT | U8G2_DRAW_UPPER_LEFT);
+
+#define DRAW_BLACK_PRESS(X) \
+u8g2_DrawFilledEllipse(&u8g2, B_KEY_START_X + X * W_KEY_STRIDE + B_KEY_WIDTH/2, \
+  B_KEY_PRESS_Y, KEY_PRES_RAD, KEY_PRES_RAD, U8G2_DRAW_UPPER_RIGHT | U8G2_DRAW_UPPER_LEFT);
+
 #ifdef __cplusplus
 }
 #endif

@@ -117,27 +117,32 @@ uint8_t u8x8_gpio_and_delay(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *ar
 
 
 
+
 void update_lcd(void * params) {
 
   const TickType_t xFrequency = 100/portTICK_PERIOD_MS;
   TickType_t xLastWakeTime = xTaskGetTickCount();
 
   while (1) {
-    START_TIMING
+    // START_TIMING
 
     // Read key presses
     lcd_t queue;
     xQueuePeek(lcdQueue, &queue, 0);
 
-    u8g2_ClearBuffer(&u8g2);
+    // u8g2_ClearBuffer(&u8g2);
     u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);
-    u8g2_DrawStr(&u8g2, 2, 10, queue);  // write something to the internal memory
+    // u8g2_DrawStr(&u8g2, 2, 10, queue);  // write something to the internal memory
     u8g2_SendBuffer(&u8g2);
+      
+      
+
+    
 
     // Toggle MCU LED
     HAL_GPIO_TogglePin(GPIOB, LED_BUILTIN_Pin);
 
-    END_TIMING
+    // END_TIMING
 
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }
@@ -145,6 +150,8 @@ void update_lcd(void * params) {
 }
 
 int myint;
+
+
 
 void init_lcd() {
   u8g2_Setup_ssd1305_i2c_128x32_noname_f(&u8g2, U8G2_R0, u8x8_byte_hw_i2c, u8x8_gpio_and_delay);
@@ -158,8 +165,32 @@ void init_lcd() {
   u8g2_InitDisplay(&u8g2); // send init sequence to the display, display is in sleep mode after this,
   u8g2_SetPowerSave(&u8g2, 0); // wake up display
 
+  u8g2_SetDrawColor(&u8g2, 2);
+  // draw white keys
+  DRAW_WHITE_KEY(0);
+  DRAW_WHITE_KEY(1);
+  DRAW_WHITE_KEY(2);
+  DRAW_WHITE_KEY(3);
+  DRAW_WHITE_KEY(4);
+  DRAW_WHITE_KEY(5);
+  DRAW_WHITE_KEY(6);
+ 
+
+  // draw black keys
+  DRAW_BLACK_KEY(0);
+  DRAW_BLACK_KEY(1);
+  DRAW_BLACK_KEY(3);
+  DRAW_BLACK_KEY(4);
+  DRAW_BLACK_KEY(5);
+
+  u8g2_SetDrawColor(&u8g2, 1);
+  DRAW_WHITE_PRESS(1);
+  u8g2_SetDrawColor(&u8g2, 0);
+  DRAW_BLACK_PRESS(3);
+
+
   DEBUG_PRINT("Initialising Refresh LCD");
-  if (xTaskCreate(update_lcd, "Refresh LCD", 128, &myint, 4, NULL) != pdPASS ) {
+  if (xTaskCreate(update_lcd, "Refresh LCD", 128, NULL, 4, NULL) != pdPASS ) {
     DEBUG_PRINT("Error. Free memory: ");
     print(xPortGetFreeHeapSize());
   }

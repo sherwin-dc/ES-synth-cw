@@ -141,7 +141,7 @@ void scanKeysTask(void * params) {
             }
 
             // update knobs
-            knobDecode(keyPressed + 12); // this is a bit hacky, need testing
+            // knobDecode(keyPressed + 12); // this is a bit hacky, need testing
 
             xQueueOverwrite(boardkeys, &keyPressed);
 
@@ -152,7 +152,8 @@ void scanKeysTask(void * params) {
 void init_keydetect() {
       boardkeys = xQueueCreate(1, sizeof(boardkeys_t));
       DEBUG_PRINT("Initialising Detect Keys");
-      if (xTaskCreate(scanKeysTask, "Detect keys", 512, NULL, 5, NULL) != pdPASS) {
-      DEBUG_PRINT("ERROR")
+      if (xTaskCreate(scanKeysTask, "Detect keys", 128, NULL, 5, NULL) != pdPASS) {
+      DEBUG_PRINT("ERROR");
+      print(xPortGetFreeHeapSize());
       }
 }
