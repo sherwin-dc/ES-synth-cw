@@ -131,8 +131,13 @@ void update_lcd(void * params) {
     xQueuePeek(lcdQueue, &queue, 0);
 
     // u8g2_ClearBuffer(&u8g2);
-    u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);
-    // u8g2_DrawStr(&u8g2, 2, 10, queue);  // write something to the internal memory
+    u8g2_SetFont(&u8g2, u8g2_font_smallsimple_tr);
+    // clear area for print statements
+    u8g2_SetDrawColor(&u8g2, 0);
+    u8g2_DrawBox(&u8g2, 2, KEYBOARD_START_Y+W_KEY_HEIGHT+1, 128, 7);
+    u8g2_SetDrawColor(&u8g2, 1);
+
+    u8g2_DrawStr(&u8g2, 2, KEYBOARD_START_Y+W_KEY_HEIGHT+7, queue);  // write something to the internal memory
     u8g2_SendBuffer(&u8g2);
       
       
@@ -188,6 +193,8 @@ void init_lcd() {
   u8g2_SetDrawColor(&u8g2, 0);
   DRAW_BLACK_PRESS(3);
 
+  u8g2_SetDrawColor(&u8g2, 1);
+
 
   DEBUG_PRINT("Initialising Refresh LCD");
   if (xTaskCreate(update_lcd, "Refresh LCD", 128, NULL, 4, NULL) != pdPASS ) {
@@ -200,7 +207,7 @@ void init_lcd() {
 
   lcd_t lcd_init;
   for (int i=0; i<LCD_LENGTH; i++){
-    lcd_init[i] = ' ';
+    lcd_init[i] = 'X';
   }
   lcd_init[LCD_LENGTH-1] = '\0';
   xQueueOverwrite(lcdQueue, &lcd_init);
