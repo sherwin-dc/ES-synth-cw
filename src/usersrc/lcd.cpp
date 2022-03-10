@@ -158,4 +158,7 @@ void init_lcd() {
     print(xPortGetFreeHeapSize());
   }
 
+  lcdQueue = xQueueCreate(1, sizeof(lcd_t));
+  DEBUG_PRINT("Initialising LCD Queue");
+
 }
