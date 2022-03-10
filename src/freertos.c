@@ -100,7 +100,6 @@ void MX_FREERTOS_Init(void) {
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
-  DEBUG_PRINT("A")
   init_lcd();
   init_keydetect();
   /* USER CODE END RTOS_THREADS */

@@ -27,12 +27,6 @@
 #include "tim.h"
 #include "gpio.h"
 
-#include "lcd.h"
-#include "sawtooth.h"
-#include "delay.h"
-#include "keymat.h"
-#include "joystick.h"
-
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -53,6 +47,7 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -91,7 +86,7 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
+  // NOTE: CubeMX has a bug where the DMA_init() is placed too early
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -102,8 +97,8 @@ int main(void)
   MX_I2C1_Init();
   MX_LPUART1_UART_Init();
   MX_TIM1_Init();
-  MX_TIM7_Init();
   MX_TIM6_Init();
+  MX_TIM7_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start(&htim1); // Start TIM1
   HAL_TIM_Base_Start(&htim6); // TIM 6 will be used for time measurement
@@ -111,7 +106,7 @@ int main(void)
   // Initialise the DAC for 
   HAL_DAC_Start(&hdac1,DAC_CHANNEL_1);
 
-
+  HAL_Delay(1000); // Delay just after HAL init functions
   DEBUG_PRINT("HELLO WORLD");
   
   
@@ -139,9 +134,7 @@ int main(void)
   
 
   /* USER CODE END 3 */
-  
 }
-
 
 /**
   * @brief System Clock Configuration

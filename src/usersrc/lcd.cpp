@@ -120,18 +120,21 @@ uint8_t u8x8_gpio_and_delay(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *ar
 void update_lcd(void * params) {
 
   while (1) {
+    START_TIMING
 
     // Read key presses
-    lcd_t queue;
-    xQueuePeek(lcdQueue, &queue, 0);
+    // lcd_t queue;
+    // xQueuePeek(lcdQueue, &queue, 0);
 
     u8g2_ClearBuffer(&u8g2);
     u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);
-    u8g2_DrawStr(&u8g2, 2, 10, queue);  // write something to the internal memory
+    u8g2_DrawStr(&u8g2, 2, 10, "Hi");  // write something to the internal memory
     u8g2_SendBuffer(&u8g2);
 
     // Toggle MCU LED
     HAL_GPIO_TogglePin(GPIOB, LED_BUILTIN_Pin);
+
+    END_TIMING
 
     vTaskDelay( pdMS_TO_TICKS(100) );
   }
