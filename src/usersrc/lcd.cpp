@@ -123,12 +123,12 @@ void update_lcd(void * params) {
     START_TIMING
 
     // Read key presses
-    // lcd_t queue;
-    // xQueuePeek(lcdQueue, &queue, 0);
+    lcd_t queue;
+    xQueuePeek(lcdQueue, &queue, 0);
 
     u8g2_ClearBuffer(&u8g2);
     u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);
-    u8g2_DrawStr(&u8g2, 2, 10, "Hi");  // write something to the internal memory
+    u8g2_DrawStr(&u8g2, 2, 10, queue);  // write something to the internal memory
     u8g2_SendBuffer(&u8g2);
 
     // Toggle MCU LED

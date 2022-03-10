@@ -138,7 +138,7 @@ void scanKeysTask(void * params) {
             }
 
             // update knobs
-            knobDecode(keyPressed + 12); // this is a bit hacky, need testing
+            // knobDecode(keyPressed + 12); // this is a bit hacky, need testing
 
             xQueueOverwrite(boardkeys, &keyPressed);
 
