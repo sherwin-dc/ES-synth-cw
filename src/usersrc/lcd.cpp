@@ -161,4 +161,10 @@ void init_lcd() {
   lcdQueue = xQueueCreate(1, sizeof(lcd_t));
   DEBUG_PRINT("Initialising LCD Queue");
 
+  lcd_t lcd_init;
+  for (int i=0; i<LCD_LENGTH; i++){
+    lcd_init[i] = ' ';
+  }
+  xQueueOverwrite(lcdQueue, &lcd_init);
+
 }
