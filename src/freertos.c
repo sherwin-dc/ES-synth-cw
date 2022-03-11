@@ -35,7 +35,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-extern void init_lcd();
+extern void start_lcd_thread();
 extern void init_keydetect();
 /* USER CODE END PD */
 
@@ -76,7 +76,7 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE END Init */
 
   /* USER CODE BEGIN RTOS_MUTEX */
-  /* add mutexes, ... */
+  keyArrayMutex = xSemaphoreCreateMutex(); // Instantiate a mutex for the keyArray
   /* USER CODE END RTOS_MUTEX */
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
@@ -94,19 +94,25 @@ void MX_FREERTOS_Init(void) {
   #define osThreadNew(a,b,c) NULL
   /* USER CODE END RTOS_QUEUES */
 
+   DEBUG_PRINT("HELLO WORLD7");
+
   /* Create the thread(s) */
   /* creation of defaultTask */
   defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
+   DEBUG_PRINT("HELLO WORLD6");
+
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
-  init_lcd();
+  start_lcd_thread();
+   DEBUG_PRINT("HELLO WORLD2");
   init_keydetect();
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */
   /* add events, ... */
   /* USER CODE END RTOS_EVENTS */
+
 
 }
 

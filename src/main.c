@@ -34,6 +34,7 @@
 #include "delay.h"
 #include "keymat.h"
 #include "joystick.h"
+#include <stdbool.h> // contains true and false
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -53,6 +54,14 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+SemaphoreHandle_t keyArrayMutex; // Handle for mutex used when accessing keyArray
+boardkeys_t keyArray; // Global variable which is used to access the state of keys
+
+uint8_t volume = 7; // Global variable which stores volume of piano
+uint8_t octave = 4; // Global variable which stores octave of piano
+uint8_t sound = 0; // Global variable which stores sound type of piano
+uint8_t reverb = 0; // Global variable which stores reverb of piano
+uint8_t screenOffset = 0; // Global variable which stores offset of what's displayed on the screen
 
 /* USER CODE END PV */
 
@@ -112,18 +121,21 @@ int main(void)
 
   HAL_Delay(1000); // Delay just after HAL init functions
   DEBUG_PRINT("HELLO WORLD");
-  
-  
 
+  init_lcd();
 
   
   /* USER CODE END 2 */
 
   /* Init scheduler */
   osKernelInitialize();  /* Call init function for freertos objects (in freertos.c) */
+   DEBUG_PRINT("HELLO WORLD2");
   MX_FREERTOS_Init();
   /* Start scheduler */
+    DEBUG_PRINT("HELLO WORLD3"); 
   osKernelStart();
+    DEBUG_PRINT("HELOW WORLDJIH")
+
 
   /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
