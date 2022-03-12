@@ -22,6 +22,7 @@ Or to create a new PIO project:
 ```
 stm32pio new -b nucleo_l432kc
 ```
+If for whatever reason `stm32pio` isn't found, try to run it directly from the installation directory. For example, `C:\Users\0tian\AppData\Roaming\Python\Python310\Scripts\stm32pio.exe`
 
 # Troubleshooting
 

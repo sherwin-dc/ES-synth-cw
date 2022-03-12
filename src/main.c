@@ -22,11 +22,11 @@
 #include "adc.h"
 #include "can.h"
 #include "dac.h"
+#include "dma.h"
 #include "i2c.h"
 #include "usart.h"
 #include "tim.h"
 #include "gpio.h"
-#include "ES_CAN.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -105,14 +105,15 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  // MX_CAN1_Init();
+  MX_CAN1_Init();
   MX_DAC1_Init();
   MX_ADC1_Init();
   MX_I2C1_Init();
   MX_LPUART1_UART_Init();
   MX_TIM1_Init();
-  MX_TIM6_Init();
+  MX_DMA_Init();
   MX_TIM7_Init();
+  MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start(&htim1); // Start TIM1
   HAL_TIM_Base_Start(&htim6); // TIM 6 will be used for time measurement
@@ -143,7 +144,6 @@ int main(void)
   osKernelStart();
     DEBUG_PRINT("HELOW WORLDJIH")
 
-
   /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
@@ -151,6 +151,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    
   
 
 
