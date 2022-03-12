@@ -64,6 +64,8 @@ uint8_t sound = 0; // Global variable which stores sound type of piano
 uint8_t reverb = 0; // Global variable which stores reverb of piano
 uint8_t screenOffset = 0; // Global variable which stores offset of what's displayed on the screen
 
+volatile uint8_t TX_Message[8] = {0}; // Stores outgoing messages on the CAN Bus
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
