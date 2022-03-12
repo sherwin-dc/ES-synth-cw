@@ -54,6 +54,9 @@ extern uint8_t screenOffset; // Global variable which stores offset of what's di
 
 // Stores outgoing messages on the CAN Bus
 extern volatile uint8_t TX_Message[8];
+
+// handles incoming messages
+extern QueueHandle_t msgInQ;
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/

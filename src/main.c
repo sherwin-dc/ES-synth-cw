@@ -66,6 +66,8 @@ uint8_t screenOffset = 0; // Global variable which stores offset of what's displ
 
 volatile uint8_t TX_Message[8] = {0}; // Stores outgoing messages on the CAN Bus
 
+QueueHandle_t msgInQ;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -133,7 +135,8 @@ int main(void)
   // setCANFilter(0x123, 0x7ff, 0);
   // CAN_Start();
 
-  
+  // Initialise CAN message queue
+  msgInQ = xQueueCreate(36,8);
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -152,11 +155,6 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    
-  
-
-
-  
 
   /* USER CODE END 3 */
 }
