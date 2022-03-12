@@ -4,6 +4,10 @@
 #include "task.h"
 #include "keymat.h"
 
+// for debug only
+#include "lcd.h"
+#include <stdio.h>
+
 #include "main.h"
 
 #include <cstring> // Contains the memcpy function
@@ -64,6 +68,7 @@ void setRow(uint8_t rowIdx) {
 
 
 // Check whether knobs are being turned
+// ! Also detects whether keys state has been changed
 void knobDecode(boardkeys_t newKeys) {
 
       // Static variable holding the keys from the last time the function was called
@@ -97,6 +102,32 @@ void knobDecode(boardkeys_t newKeys) {
             }
       }
 
+      // Check for changes in key presses
+      uint8_t anyKeyPressed = false;
+      for (int i=0; i<12; i++){
+            uint8_t oldKeyState = oldKeys[i];
+            uint8_t newKeyState = newKeys[i];
+
+            // button state has changed
+            if (oldKeyState ^ newKeyState) {
+                  anyKeyPressed = true;
+                  // TODO: Add this to a queue so that multiple simultaneous key presses are also reflected
+                  TX_Message[1] = i;
+                  TX_Message[2] = octave;
+
+                  // Button has been pressed
+                  if (oldKeyState==1)      { TX_Message[0] = 'P'; }
+                  // Button has been released
+                  else if (oldKeyState==0) { TX_Message[0] = 'R'; }
+            } 
+      }
+      if (!anyKeyPressed) {
+            // Clear tx buffer
+            // TX_Message[0] = ' ';
+            // TX_Message[1] = ' ';
+            // TX_Message[2] = ' ';
+      }
+
       // Update related global variables
       if(knobRotation[0] != 0){ // Update volume
             int tmpVolume= int(__atomic_load_n(&volume,__ATOMIC_RELAXED)) + knobRotation[0];
@@ -126,7 +157,6 @@ void knobDecode(boardkeys_t newKeys) {
       memcpy(oldKeys,newKeys,sizeof(oldKeys));
 }
 
-
 // main function that scan keys
 void scanKeysTask(void * params) {
       const TickType_t xFrequency = 50/portTICK_PERIOD_MS;
@@ -136,20 +166,42 @@ void scanKeysTask(void * params) {
 
             // Array of piano keys which are pressed
             boardkeys_t keyPressed;
+            // boardkeys_t keyChanges = {0};
             
             // Check the state of each key
             for (int i = 0;i < 7; i++){
                   setRow(i);
                   delay_microseconds(4);
                   uint8_t keys = readCols();
-                  keyPressed[i*4]   = (keys & (uint8_t)0x01) >> 0;
-                  keyPressed[i*4+1] = (keys & (uint8_t)0x02) >> 1;
-                  keyPressed[i*4+2] = (keys & (uint8_t)0x04) >> 2;
-                  keyPressed[i*4+3] = (keys & (uint8_t)0x08) >> 3;
+
+                  // Roll previous code into a loop
+                  for (int j=0; j< 4; j++){
+                        uint8_t bitmask = 1 << j;
+                        uint8_t bitShiftedResult = (keys & bitmask) >> j;
+                        // keyChanges[i*4 + j] = keyPressed[i*4 + j] ^ bitShiftedResult;
+                        keyPressed[i*4 + j] = bitShiftedResult;
+                  }
+
+                  // keyPressed[i*4]   = (keys & (uint8_t)0x01) >> 0;
+                  // keyPressed[i*4+1] = (keys & (uint8_t)0x02) >> 1;
+                  // keyPressed[i*4+2] = (keys & (uint8_t)0x04) >> 2;
+                  // keyPressed[i*4+3] = (keys & (uint8_t)0x08) >> 3;
             }
 
             // Decode whether any of the knobs are being turned
+            // ! And if key state has changed since previous iteration
             knobDecode(keyPressed);
+
+            // ~ debug code
+            lcd_t lcd;
+            sprintf(lcd, "%c %u %u", TX_Message[0], TX_Message[1], TX_Message[2]);
+            DEBUG_PRINT("Read Pins");
+
+            u8g2_ClearBuffer(&u8g2);
+            u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);
+            u8g2_DrawStr(&u8g2, 2, 10, lcd);  // write something to the internal memory
+            u8g2_SendBuffer(&u8g2);
+            // ~ end debug code
 
             // Write the state of each key to the keyArray
             xSemaphoreTake(keyArrayMutex, portMAX_DELAY);
