@@ -20,9 +20,17 @@ uint8_t readJoystick() {
         HAL_ADC_Start(&hadc1);
         HAL_ADC_PollForConversion(&hadc1, joystickMaxDelay);
         uint32_t rawx = HAL_ADC_GetValue(&hadc1);
-        sprintf(lcd,"%lu",rawx);
 
-        // DEBUG_PRINT("Read Joy Stick");
+        HAL_ADC_PollForConversion(&hadc1, joystickMaxDelay);
+        uint32_t rawy = HAL_ADC_GetValue(&hadc1);
+        // uint32_t rawy = rawx;
+
+        HAL_ADC_Stop(&hadc1);
+
+        // rawx += (rawy << 16);
+        sprintf(lcd,"%lu | %lu",rawx, rawy);
+
+        DEBUG_PRINT("Read Joy Stick");
 
         u8g2_ClearBuffer(&u8g2);
         u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);

@@ -131,7 +131,6 @@ int main(void)
   // setCANFilter(0x123, 0x7ff, 0);
   // CAN_Start();
 
-
   
   /* USER CODE END 2 */
 
