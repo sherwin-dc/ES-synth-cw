@@ -1,9 +1,11 @@
-#include "u8g2.h"
-#include "i2c.h"
-#include "keymat.h"
-#include "delay.h"
+#include <string>
+#include "lcd.h"
+#include "main.h"
+#include <cstring>
+#include <vector>
 
 u8g2_t u8g2;
+ QueueHandle_t lcdQueue;
 
 uint8_t u8x8_byte_hw_i2c(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *arg_ptr) {
   static uint8_t buffer[32];		/* u8g2/u8x8 will never send more than 32 bytes between START_TRANSFER and END_TRANSFER */
@@ -116,7 +118,85 @@ uint8_t u8x8_gpio_and_delay(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *ar
   return 1;
 }
 
-extern "C" void init_lcd() {
+
+
+
+void update_lcd(void * params) {
+
+  const TickType_t xFrequency = 100/portTICK_PERIOD_MS;
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+  boardkeys_t tmp_keyArray;
+
+  std::vector<std::string> notes = {"C","C#","D","D#","E","F","F#","G","G#","A","A#","B"};
+  std::vector<std::string> sounds = {"SAWTOOTH","1","2","3","4","5","6","7","8","9"};
+
+  while (1) {
+    // START_TIMING
+
+    u8g2_ClearBuffer(&u8g2); // Clear content on screen
+    u8g2_SetFont(&u8g2, u8g2_font_smallsimple_tr); // Set font size
+
+    // Variable used to position data on screen
+    uint8_t tmpOffset = __atomic_load_n(&screenOffset,__ATOMIC_RELAXED);
+
+    // Write out which keys are being pressed
+    xSemaphoreTake(keyArrayMutex, portMAX_DELAY);
+    memcpy(tmp_keyArray,keyArray,sizeof(keyArray));
+    xSemaphoreGive(keyArrayMutex);
+
+    char tmp0 [40] = "NOTES: ";
+    for(int i=0; i < 12; i++){
+      if(!tmp_keyArray[i]){
+        char tmpNote[1024];
+        strcpy(tmpNote, notes[i].c_str());
+        strcat(tmp0,tmpNote);
+        strcat(tmp0," ");
+      }
+    }
+
+    u8g2_SetDrawColor(&u8g2, 1);
+    u8g2_DrawStr(&u8g2, 2, 7 - tmpOffset, tmp0);  // write string to display
+
+    // Write out the volume
+    char tmp1 [30] = "VOLUME: ";
+    tmp1[8] = __atomic_load_n(&volume,__ATOMIC_RELAXED) + 48;
+    u8g2_DrawStr(&u8g2, 2, 15 - tmpOffset, tmp1);  // write string to display
+
+    // Write out the octave
+    char tmp2 [30] = "OCTAVE: ";
+    tmp2[8] = __atomic_load_n(&octave,__ATOMIC_RELAXED) + 48;
+    u8g2_DrawStr(&u8g2, 2, 23 - tmpOffset, tmp2);  // write string to display
+
+    // Write out the sound
+    char tmp3 [30] = "SOUND: ";
+    //tmp3[7] = __atomic_load_n(&sound,__ATOMIC_RELAXED) + 48;
+    strcat(tmp3,sounds[__atomic_load_n(&sound,__ATOMIC_RELAXED)].c_str());
+    u8g2_DrawStr(&u8g2, 2, 31 - tmpOffset, tmp3);  // write string to display
+
+    // Write out the reverb
+    char tmp4 [30] = "REVERB: ";
+    tmp4[8] = __atomic_load_n(&reverb,__ATOMIC_RELAXED) + 48;
+    u8g2_DrawStr(&u8g2, 70, 15 - tmpOffset, tmp4);  // write string to display
+
+
+    // Send the buffer to the LCD
+    u8g2_SendBuffer(&u8g2);
+
+    DEBUG_PRINT("LCD running")
+
+    // Toggle MCU LED
+    HAL_GPIO_TogglePin(GPIOB, LED_BUILTIN_Pin);
+
+    // END_TIMING
+
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
+  }
+
+}
+
+
+void init_lcd() {
+
   u8g2_Setup_ssd1305_i2c_128x32_noname_f(&u8g2, U8G2_R0, u8x8_byte_hw_i2c, u8x8_gpio_and_delay);
 
   //Initialise display
@@ -125,21 +205,19 @@ extern "C" void init_lcd() {
   setOutMuxBit(4, true);  //Release display logic reset
   setOutMuxBit(3, true);  //Enable display power supply
 
-  
   u8g2_InitDisplay(&u8g2); // send init sequence to the display, display is in sleep mode after this,
-  u8g2_SetPowerSave(&u8g2, 0); // wake up display
+  u8g2_SetPowerSave(&u8g2, 0); // wake up display*/
+
 }
 
-extern "C" void update_lcd() {
-  u8g2_ClearBuffer(&u8g2);
-  u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);
-  u8g2_DrawStr(&u8g2, 2, 10,"Helllo World!");  // write something to the internal memory
-  u8g2_SendBuffer(&u8g2);
-}
 
-extern "C" void update_lcd(const char* message) {
-  u8g2_ClearBuffer(&u8g2);
-  u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);
-  u8g2_DrawStr(&u8g2, 2, 10, message);  // write something to the internal memory
-  u8g2_SendBuffer(&u8g2);
+
+void start_lcd_thread() {
+
+  DEBUG_PRINT("Initialising Refresh LCD");
+  if (xTaskCreate(update_lcd, "Refresh LCD", 128, NULL, 4, NULL) != pdPASS ) {
+    DEBUG_PRINT("Error. Free memory: ");
+    print(xPortGetFreeHeapSize());
+  }
+
 }

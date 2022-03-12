@@ -7,4 +7,9 @@ extern "C" void print(uint32_t val) {
   HAL_UART_Transmit(&hlpuart1, (uint8_t *) str.c_str(), str.size(), 100); 
 }  
 
+void print(std::string str) {
+  str += "\n";
+  HAL_UART_Transmit(&hlpuart1, (uint8_t *) str.c_str(), str.size(), 100); 
+}  
+
 

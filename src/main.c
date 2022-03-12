@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "cmsis_os.h"
 #include "adc.h"
 #include "can.h"
 #include "dac.h"
@@ -29,7 +30,12 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "lcd.h"
+#include "sawtooth.h"
+#include "delay.h"
+#include "keymat.h"
+#include "joystick.h"
+#include <stdbool.h> // contains true and false
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -49,14 +55,21 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-volatile uint8_t TX_Message[8] = {0};
+SemaphoreHandle_t keyArrayMutex; // Handle for mutex used when accessing keyArray
+boardkeys_t keyArray; // Global variable which is used to access the state of keys
+
+uint8_t volume = 7; // Global variable which stores volume of piano
+uint8_t octave = 4; // Global variable which stores octave of piano
+uint8_t sound = 0; // Global variable which stores sound type of piano
+uint8_t reverb = 0; // Global variable which stores reverb of piano
+uint8_t screenOffset = 0; // Global variable which stores offset of what's displayed on the screen
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+void MX_FREERTOS_Init(void);
 /* USER CODE BEGIN PFP */
-extern void update_lcd();
-extern void init_lcd();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -87,7 +100,7 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
+  // NOTE: CubeMX has a bug where the DMA_init() is placed too early
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -98,42 +111,51 @@ int main(void)
   MX_I2C1_Init();
   MX_LPUART1_UART_Init();
   MX_TIM1_Init();
+  MX_TIM6_Init();
+  MX_TIM7_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start(&htim1); // Start TIM1
-  HAL_Delay(1000);
+  HAL_TIM_Base_Start(&htim6); // TIM 6 will be used for time measurement
+  HAL_TIM_Base_Start_IT(&htim7);
+  // Initialise the DAC for 
+  HAL_DAC_Start(&hdac1,DAC_CHANNEL_1);
+
+  HAL_Delay(1000); // Delay just after HAL init functions
+  DEBUG_PRINT("HELLO WORLD");
+
   init_lcd();
   DEBUG_PRINT("Hello World!");  
 
-  CAN_INIT(true);
-  setCANFilter(0x123, 0x7ff, 0);
-  CAN_Start();
+  // CAN_INIT(true);
+  // setCANFilter(0x123, 0x7ff, 0);
+  // CAN_Start();
 
+
+  
   /* USER CODE END 2 */
 
+  /* Init scheduler */
+  osKernelInitialize();  /* Call init function for freertos objects (in freertos.c) */
+   DEBUG_PRINT("HELLO WORLD2");
+  MX_FREERTOS_Init();
+  /* Start scheduler */
+    DEBUG_PRINT("HELLO WORLD3"); 
+  osKernelStart();
+    DEBUG_PRINT("HELOW WORLDJIH")
+
+
+  /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  
-  while (1)
-  {
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    HAL_Delay(1000);
-    HAL_GPIO_TogglePin(GPIOB, LED_BUILTIN_Pin);
+  
 
-    CAN_TX(0x123, TX_Message);
 
-    // hacky place to put CAN vars for now
-    uint32_t CAN_RX_ID;
-    uint8_t CAN_RX_DATA;
+  
 
-    while(CAN_CheckRXLevel()){
-      CAN_RX(CAN_RX_ID, CAN_RX_DATA);
-      DEBUG_PRINT(CAN_RX_ID);
-      update_lcd(CAN_RX_DATA);
-    }
-
-  }
   /* USER CODE END 3 */
 }
 
@@ -198,6 +220,7 @@ void Error_Handler(void)
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
   __disable_irq();
+  DEBUG_PRINT("ERROR");
   while (1)
   {
   }
