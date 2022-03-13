@@ -192,6 +192,7 @@ void scanKeysTask(void * params) {
             // ! And if key state has changed since previous iteration
             knobDecode(keyPressed);
 
+            /*
             // ~ debug code
             lcd_t lcd;
             sprintf(lcd, "%c %u %u", TX_Message[0], TX_Message[1], TX_Message[2]);
@@ -202,6 +203,7 @@ void scanKeysTask(void * params) {
             u8g2_DrawStr(&u8g2, 2, 10, lcd);  // write something to the internal memory
             u8g2_SendBuffer(&u8g2);
             // ~ end debug code
+            */
 
             // Write the state of each key to the keyArray
             xSemaphoreTake(keyArrayMutex, portMAX_DELAY);
