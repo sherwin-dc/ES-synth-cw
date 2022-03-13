@@ -1,6 +1,7 @@
 
 #include "dac.h"
 #include "debug.h"
+#include "tim.h"
 
 
 //const float frequencies [12] = {261.63,277.18,293.66,311.13,329.63,349.23,370.00,392.00,415.30,440.00,466.16,493.88}
@@ -23,6 +24,22 @@ extern "C" void sampleISR(){
 
     //uint8_t var = 1.2*(4096)/3.3;
     //HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_12B_R, var);
+}
+
+extern "C" void init_sound() {
+  HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_1, (uint32_t *) stepSizes, 12, DAC_ALIGN_12B_R);
+  HAL_TIM_Base_Start(&htim2);
+
+  HAL_Delay(500);
+  __HAL_TIM_SET_AUTORELOAD(&htim2, 4000);
+
+  HAL_Delay(500);
+  __HAL_TIM_SET_AUTORELOAD(&htim2, 2000);
+
+  HAL_Delay(500);
+  HAL_DAC_Stop_DMA(&hdac1, DAC_CHANNEL_1);
+
+  
 }
 
 /*

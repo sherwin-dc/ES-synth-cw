@@ -104,7 +104,9 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-  // NOTE: CubeMX has a bug where the DMA_init() is placed too early
+  // NOTE: CubeMX has a bug where the DMA_init() is placed too late
+  MX_DMA_Init();
+  #define MX_DMA_Init()
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -118,6 +120,7 @@ int main(void)
   MX_DMA_Init();
   MX_TIM7_Init();
   MX_TIM6_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start(&htim1); // Start TIM1
   HAL_TIM_Base_Start(&htim6); // TIM 6 will be used for time measurement
@@ -131,6 +134,8 @@ int main(void)
   init_lcd();
   DEBUG_PRINT("Hello World!");  
 
+  init_sound();
+
   // CAN_INIT(true);
   // setCANFilter(0x123, 0x7ff, 0);
   // CAN_Start();
@@ -141,12 +146,9 @@ int main(void)
 
   /* Init scheduler */
   osKernelInitialize();  /* Call init function for freertos objects (in freertos.c) */
-   DEBUG_PRINT("HELLO WORLD2");
   MX_FREERTOS_Init();
   /* Start scheduler */
-    DEBUG_PRINT("HELLO WORLD3"); 
   osKernelStart();
-    DEBUG_PRINT("HELOW WORLDJIH")
 
   /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
