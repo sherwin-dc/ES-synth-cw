@@ -215,7 +215,7 @@ void init_lcd() {
 void start_lcd_thread() {
 
   DEBUG_PRINT("Initialising Refresh LCD");
-  if (xTaskCreate(update_lcd, "Refresh LCD", 128, NULL, 4, NULL) != pdPASS ) {
+  if (xTaskCreate(update_lcd, "Refresh LCD", 512, NULL, 4, NULL) != pdPASS ) {
     DEBUG_PRINT("Error. Free memory: ");
     print(xPortGetFreeHeapSize());
   }
