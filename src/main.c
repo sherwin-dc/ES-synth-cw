@@ -118,13 +118,11 @@ int main(void)
   MX_LPUART1_UART_Init();
   MX_TIM1_Init();
   MX_DMA_Init();
-  MX_TIM7_Init();
   MX_TIM6_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start(&htim1); // Start TIM1
   HAL_TIM_Base_Start(&htim6); // TIM 6 will be used for time measurement
-  HAL_TIM_Base_Start_IT(&htim7);
   // Initialise the DAC for 
   HAL_DAC_Start(&hdac1,DAC_CHANNEL_1);
 

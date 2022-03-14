@@ -2,6 +2,7 @@
 #include "dac.h"
 #include "debug.h"
 #include "tim.h"
+#include "dma.h"
 
 
 //const float frequencies [12] = {261.63,277.18,293.66,311.13,329.63,349.23,370.00,392.00,415.30,440.00,466.16,493.88}
@@ -41,6 +42,15 @@ extern "C" void init_sound() {
 
   
 }
+
+void HAL_DAC_ConvCpltCallbackCh1(DAC_HandleTypeDef *hdac) {
+  // DEBUG_PRINT("FULL")
+}
+
+void HAL_DAC_ConvHalfCpltCallbackCh1(DAC_HandleTypeDef *hdac) {
+  // DEBUG_PRINT("HALF")
+}
+
 
 /*
 //const int32_t frequencies [12] = {261.63,277.18,293.66,311.13,329.63,349.23,370.00,392.00,415.30,440.00,466.16,493.88}
