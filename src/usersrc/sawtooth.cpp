@@ -51,6 +51,9 @@ uint32_t chorusAccumulators [9*12*4] = {0}; // Array which holds extra accumulat
 
 uint32_t steps [1100] = {0}; // Array which holds the data which the DMA gives the DAC
 
+uint32_t reverbArray [3300] = {0}; // Array which holds the data which the reverb function uses
+uint8_t reverbIndex = 0; // Keeps track of where in the array we should write data next
+
 // Overwrite section of array read by DMA, region determines which section (either 0 or 1) 
 extern "C" void sampleSound(uint8_t region){
   uint32_t tmpSteps [550] = {0}; // Array to temporarily hold the values which we write to steps
@@ -110,7 +113,6 @@ extern "C" void sampleSound(uint8_t region){
             chorusAccumulators[i+2*108] += uint32_t(1.00594*float(stepSizes[i]));
             tmpSteps[j] += uint32_t(0.316*float(chorusAccumulators[i+3*108])) >> (27-tmpVolume);
             chorusAccumulators[i+3*108] += uint32_t(1.01189*float(stepSizes[i]));
-            
           }
         }
       }
@@ -129,6 +131,23 @@ extern "C" void sampleSound(uint8_t region){
       // Do nothing
       DEBUG_PRINT("CASE DEFAULT")
       break;
+  }
+
+  // Add reverb
+  uint8_t tmpReverb = __atomic_load_n(&reverb,__ATOMIC_RELAXED); // Read in the reverb
+    if(tmpReverb > 0){
+      for(int i=0; i<550; i++){
+      tmpSteps[i] += (float(tmpReverb)/10)*float(reverbArray[i+reverbIndex*550]);
+    }
+
+    // Copy array to queue used by reverb
+    std::copy(tmpSteps, tmpSteps + 550, reverbArray + reverbIndex*550);
+
+    if(reverbIndex >= 5){
+      reverbIndex = 0;
+    }else{
+      reverbIndex++;
+    }
   }
 
   // Copy array to memory used by DMA 
