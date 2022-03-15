@@ -5,6 +5,7 @@
 #include "dma.h"
 #include "main.h"
 
+#include <math.h>
 #include <algorithm> // std::copy
 #include <cstring> // Contains the memcpy function
 
@@ -45,63 +46,98 @@ const uint32_t sine [128] = {
 
 uint32_t accumulators [9*12] = {0}; // Array which holds an accumulator for all notes
 
-uint32_t steps [2200] = {0}; // Array which holds the data which the DMA gives the DAC
+uint32_t chorusAccumulators [9*12*4] = {0}; // Array which holds extra accumulators used in chorus mode
+
+
+uint32_t steps [1100] = {0}; // Array which holds the data which the DMA gives the DAC
 
 // Overwrite section of array read by DMA, region determines which section (either 0 or 1) 
 extern "C" void sampleSound(uint8_t region){
-  uint32_t tmpSteps [1100] = {0}; // Array to temporarily hold the values which we write to steps
+  uint32_t tmpSteps [550] = {0}; // Array to temporarily hold the values which we write to steps
 
   // Read in the volume
   uint8_t tmpVolume = __atomic_load_n(&volume,__ATOMIC_RELAXED);
 
   // Calculate what the array should be for the next iteration
   switch(__atomic_load_n(&sound,__ATOMIC_RELAXED)) {
-    case 1: // Polyphony
+    case 0: // Sawtooth
       for(int i=0; i<9*12; i++){
         if(__atomic_load_n(&playedNotes[i],__ATOMIC_RELAXED)){
-          for(int j=0; j<1100; j++){
-            tmpSteps[j] += accumulators[i] >> (27-tmpVolume);
-            accumulators[i] += stepSizes[i];
-          }
-        }
-      }
-      break;
-    case 2: // Sinewave
-      for(int i=0; i<9*12; i++){
-        if(__atomic_load_n(&playedNotes[i],__ATOMIC_RELAXED)){
-          for(int j=0; j<1100; j++){
-            tmpSteps[j] += sine[accumulators[i]>>26] >> (27-tmpVolume);
-            accumulators[i] += stepSizes[i];
-          }
-        }
-      }
-      break;
-    case 3: // Chorus
-      for(int i=0; i<9*12; i++){
-        if(__atomic_load_n(&playedNotes[i],__ATOMIC_RELAXED)){
-
-        }
-      }
-      break;
-    default: // Sawtooth
-      for(int i=0; i<9*12; i++){
-        if(__atomic_load_n(&playedNotes[i],__ATOMIC_RELAXED)){
-          for(int j=0; j<1100; j++){
+          for(int j=0; j<550; j++){
             tmpSteps[j] = accumulators[i] >> (27-tmpVolume);
             accumulators[i] += stepSizes[i];
           }
           break;
         }
       }
+      break;
+    case 1: // Polyphony
+      for(int i=0; i<9*12; i++){
+        if(__atomic_load_n(&playedNotes[i],__ATOMIC_RELAXED)){
+          for(int j=0; j<550; j++){
+            tmpSteps[j] += accumulators[i] >> (27-tmpVolume);
+            accumulators[i] += stepSizes[i];
+          }
+        }
+      }
+      break;
+    case 2: // Chorus
+      for(int i=0; i<9*12; i++){
+        if(__atomic_load_n(&playedNotes[i],__ATOMIC_RELAXED)){
+          for(int j=0; j<550; j++){
+            tmpSteps[j] += uint32_t(0.70*float(accumulators[i])) >> (27-tmpVolume);
+            accumulators[i] += stepSizes[i];
+            tmpSteps[j] += uint32_t(0.5*float(chorusAccumulators[i])) >> (27-tmpVolume);
+            chorusAccumulators[i] += uint32_t(0.98810*float(stepSizes[i]));
+            tmpSteps[j] += uint32_t(0.5*float(chorusAccumulators[i+108])) >> (27-tmpVolume);
+            chorusAccumulators[i+108] += uint32_t(1.01189*float(stepSizes[i]));
+            
+          }
+        }
+      }
+      break;
+    case 3: // LASER
+      for(int i=0; i<9*12; i++){
+        if(__atomic_load_n(&playedNotes[i],__ATOMIC_RELAXED)){
+          for(int j=0; j<550; j++){
+            tmpSteps[j] += uint32_t(0.63*float(accumulators[i])) >> (27-tmpVolume);
+            accumulators[i] += stepSizes[i];
+            tmpSteps[j] += uint32_t(0.316*float(chorusAccumulators[i])) >> (27-tmpVolume);
+            chorusAccumulators[i] += uint32_t(0.98810*float(stepSizes[i]));
+            tmpSteps[j] += uint32_t(0.447*float(chorusAccumulators[i+108])) >> (27-tmpVolume);
+            chorusAccumulators[i+108] += uint32_t(0.99405*float(stepSizes[i]));
+            tmpSteps[j] += uint32_t(0.447*float(chorusAccumulators[i+2*108])) >> (27-tmpVolume);
+            chorusAccumulators[i+2*108] += uint32_t(1.00594*float(stepSizes[i]));
+            tmpSteps[j] += uint32_t(0.316*float(chorusAccumulators[i+3*108])) >> (27-tmpVolume);
+            chorusAccumulators[i+3*108] += uint32_t(1.01189*float(stepSizes[i]));
+            
+          }
+        }
+      }
+      break;
+    case 4: // Sinewave
+      for(int i=0; i<9*12; i++){
+        if(__atomic_load_n(&playedNotes[i],__ATOMIC_RELAXED)){
+          for(int j=0; j<550; j++){
+            tmpSteps[j] += sine[accumulators[i]>>26] >> (27-tmpVolume);
+            accumulators[i] += stepSizes[i];
+          }
+        }
+      }
+      break;
+    default:
+      // Do nothing
+      DEBUG_PRINT("CASE DEFAULT")
+      break;
   }
 
   // Copy array to memory used by DMA 
-  std::copy(tmpSteps, tmpSteps + 1100, steps + region*1100);
+  std::copy(tmpSteps, tmpSteps + 550, steps + region*550);
 
 }
 
 extern "C" void init_sound() {
-  HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_1, (uint32_t *) steps, 2200, DAC_ALIGN_12B_R);
+  HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_1, (uint32_t *) steps, 1100, DAC_ALIGN_12B_R);
   HAL_TIM_Base_Start(&htim2);
 
   HAL_Delay(500);
