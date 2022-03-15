@@ -133,15 +133,13 @@ int main(void)
   DEBUG_PRINT("HELLO WORLD");
 
   init_lcd();
-  DEBUG_PRINT("Hello World!");  
-
+  DEBUG_PRINT("Hello World!");
   init_sound();
 
   // Initialise CAN message queue
   msgInQ = xQueueCreate(36,8);
 
   // Initialize CAN bus
-  CAN_Init(true);
   setCANFilter(0x123, 0x7ff, 0);
   CAN_RegisterRX_ISR(CAN_RX_ISR);
   CAN_Start();
