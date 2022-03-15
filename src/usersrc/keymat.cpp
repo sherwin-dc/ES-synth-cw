@@ -167,7 +167,7 @@ void knobDecode(boardkeys_t newKeys) {
 
 // main function that scan keys
 void scanKeysTask(void * params) {
-      const TickType_t xFrequency = 50/portTICK_PERIOD_MS;
+      const TickType_t xFrequency = 20/portTICK_PERIOD_MS;
       TickType_t xLastWakeTime = xTaskGetTickCount();
 
       while (1) {
