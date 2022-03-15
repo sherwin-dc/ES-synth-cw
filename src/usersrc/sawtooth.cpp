@@ -48,11 +48,14 @@ extern "C" void sampleSound(uint8_t region){
     case 1: // Sine wave
       for(int i=0; i<9*12; i++){
         if(tmpNotes[i]){
+          uint32_t step = 0;
+          uint32_t stepSize = 4294967295/periods[i];
           for(int j=0; j<1100; j++){
             //tmpSteps[j] += (float(tmpVolume)/9)*4096*(fmod(j,periods[i])/periods[i]);
             //tmpSteps[j] = 2048*(float(tmpVolume)/9)*sin(periods[i]*j*2*3.14159) + 2048;
+            tmpSteps[j] += step >> (27-tmpVolume);
+            step += stepSize;
           }
-          break;
         }
       }
       break;

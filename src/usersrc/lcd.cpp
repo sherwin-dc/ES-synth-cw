@@ -128,7 +128,7 @@ void update_lcd(void * params) {
   boardkeys_t tmp_keyArray;
 
   std::vector<std::string> notes = {"C","C#","D","D#","E","F","F#","G","G#","A","A#","B"};
-  std::vector<std::string> sounds = {"SAWTOOTH","SINEWAVE","2","3","4","5","6","7","8","9"};
+  std::vector<std::string> sounds = {"SAWTOOTH","POLYPHONY","2","3","4","5","6","7","8","9"};
 
   while (1) {
     // START_TIMING

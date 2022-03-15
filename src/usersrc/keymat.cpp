@@ -131,7 +131,7 @@ void knobDecode(boardkeys_t newKeys) {
       // Update related global variables
       if(knobRotation[0] != 0){ // Update volume
             int tmpVolume= int(__atomic_load_n(&volume,__ATOMIC_RELAXED)) + knobRotation[0];
-            tmpVolume = std::min(std::max(int(tmpVolume),0),9);
+            tmpVolume = std::min(std::max(int(tmpVolume),0),7);
             __atomic_store_n(&volume,tmpVolume,__ATOMIC_RELAXED);
       }
 
