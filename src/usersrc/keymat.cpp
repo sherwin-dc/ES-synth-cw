@@ -69,7 +69,7 @@ void setRow(uint8_t rowIdx) {
 
 // Check whether knobs are being turned
 // ! Also detects whether keys state has been changed
-void knobDecode(boardkeys_t newKeys) {
+void knobDecode(boardkeys_t newKeys, uint8_t* TX_Message_Ptr) {
 
       // Static variable holding the keys from the last time the function was called
       static boardkeys_t oldKeys = {0};
@@ -112,20 +112,23 @@ void knobDecode(boardkeys_t newKeys) {
             if (oldKeyState ^ newKeyState) {
                   anyKeyPressed = true;
                   // TODO: Add this to a queue so that multiple simultaneous key presses are also reflected
-                  TX_Message[1] = i;
-                  TX_Message[2] = octave;
+                  TX_Message_Ptr[1] = i;
+                  TX_Message_Ptr[2] = octave;
 
                   // Button has been pressed
-                  if (oldKeyState==1)      { TX_Message[0] = 'P'; }
+                  if (oldKeyState==1)      { TX_Message_Ptr[0] = 'P'; }
                   // Button has been released
-                  else if (oldKeyState==0) { TX_Message[0] = 'R'; }
+                  else if (oldKeyState==0) { TX_Message_Ptr[0] = 'R'; }
+
+                  CAN_TX(0x123, TX_Message_Ptr);      // Transmit message over CAN
             } 
       }
+      
+      // Clear tx buffer
       if (!anyKeyPressed) {
-            // Clear tx buffer
-            // TX_Message[0] = ' ';
-            // TX_Message[1] = ' ';
-            // TX_Message[2] = ' ';
+            TX_Message_Ptr[0] = ' ';
+            TX_Message_Ptr[1] = ' ';
+            TX_Message_Ptr[2] = ' ';
       }
 
       // Update related global variables
@@ -169,6 +172,7 @@ void knobDecode(boardkeys_t newKeys) {
 void scanKeysTask(void * params) {
       const TickType_t xFrequency = 50/portTICK_PERIOD_MS;
       TickType_t xLastWakeTime = xTaskGetTickCount();
+      uint8_t TX_Message[8] = {0}; // Stores outgoing messages on the CAN Bus
 
       while (1) {
 
@@ -206,7 +210,7 @@ void scanKeysTask(void * params) {
 
             // Decode whether any of the knobs are being turned
             // ! And if key state has changed since previous iteration
-            knobDecode(keyPressed);
+            knobDecode(keyPressed, TX_Message);
 
             /*
             // ~ debug code
@@ -225,7 +229,6 @@ void scanKeysTask(void * params) {
             xSemaphoreTake(keyArrayMutex, portMAX_DELAY);
             memcpy((void*)keyArray,keyPressed,sizeof(keyArray));
             xSemaphoreGive(keyArrayMutex);
-
 
             vTaskDelayUntil( &xLastWakeTime, xFrequency );
       }
