@@ -30,8 +30,8 @@ void CAN_RX_ISR();
 // Set up an interrupt on received messages
 uint32_t CAN_RegisterRX_ISR(void(*callback)());
 
-//Set up an interrupt on transmitted messages
-// uint32_t CAN_RegisterTX_ISR(void(*callback)());
+// Set up an interrupt on transmitted messages
+uint32_t CAN_RegisterTX_ISR(void(*callback)());
 
 void decodeCANMessages(void* params);
 
