@@ -12,7 +12,7 @@
 
 // Step sizes needed to overflow uint32_t at correct frequency if accumulated at 22 kHz
 //(Calculate index by 12*octave + index of note)
-const uint32_t stepSizes [9*12] = { 
+const int32_t stepSizes [9*12] = { 
   3511538,3720246,3941437,4175916,4424219,4687285,4966055,5261334,5574062,5905580,6256693,6628745,
   7023076,7440493,7882875,8351832,8848438,9374571,9932111,10522669,11148124,11811160,12513387,13257490,
   14046153,14880987,15765751,16703664,17696876,18749143,19864223,21045339,22296248,23622320,25026774,26514980,
@@ -25,38 +25,54 @@ const uint32_t stepSizes [9*12] = {
 };
 
 // Array holding one period of sinf()
-const uint32_t sine [128] = {
-  0,2586752,10340736,23243392,41263360,64357504,92470144,125533312,
-  163467648,206181632,253572480,305525632,361916544,422608896,487456640,556303488,
-  628983680,705322112,785134720,868229376,954405888,1043456640,1135166976,1229316224,
-  1325677312,1424018304,1524102144,1625687808,1728530432,1832382464,1936993536,2042111616,
-  2147483648,2252855552,2357973760,2462584832,2566436864,2669279488,2770865152,2870948864,
-  2969289984,3065651200,3159800320,3251510784,3340561408,3426737920,3509832704,3589645312,
-  3665983488,3738663936,3807510528,3872358400,3933050880,3989441536,4041394688,4088785664,
-  4131499520,4169434112,4202497024,4230609920,4253703936,4271724032,4284626432,4292380672,
-  4294967295,4292380672,4284626688,4271724032,4253704192,4230609920,4202497536,4169434368,
-  4131500032,4088786432,4041395456,3989442304,3933051648,3872359168,3807511552,3738664448,
-  3665984512,3589646336,3509833728,3426739200,3340562944,3251511808,3159801600,3065652224,
-  2969291264,2870950400,2770866176,2669280768,2566438400,2462586112,2357975296,2252856832,
-  2147484928,2042113152,1936994688,1832383744,1728531968,1625689088,1524103552,1424019456,
-  1325678592,1229317632,1135168128,1043457792,954407168,868230400,785135872,705323264,
-  628984576,556304512,487457664,422609664,361917056,305526656,253573120,206182144,
-  163468416,125533824,92470400,64358016,41263744,23243520,10340864,2586880
+const int32_t sine [256] = {
+  0,52701876,105372008,157978672,210490160,262874864,315101248,367137792,
+418953184,470516224,521795872,572761152,623381504,673626240,723465344,772868544,
+821806272,870248896,918167424,965532800,1012316608,1058490624,1104027008,1148898432,
+1193077760,1236538496,1279254272,1321199488,1362348928,1402677760,1442161536,1480776832,
+1518499968,1555308544,1591180160,1626093312,1660027008,1692960896,1724874752,1755749760,
+1785567104,1814308992,1841958016,1868497408,1893911168,1918184320,1941302016,1963250304,
+1984016000,2003586560,2021950336,2039096064,2055013504,2069693184,2083126144,2095304320,
+2106220288,2115867520,2124240256,2131333504,2137142912,2141664896,2144896896,2146836864,
+2147483647,2146836864,2144896896,2141665024,2137143040,2131333632,2124240512,2115867776,
+2106220544,2095304576,2083126400,2069693568,2055014016,2039096448,2021950720,2003587200,
+1984016512,1963250944,1941302656,1918184960,1893911808,1868498176,1841958656,1814309632,
+1785568000,1755750656,1724875520,1692961792,1660028032,1626094208,1591180928,1555309568,
+1518500992,1480777728,1442162816,1402678784,1362349952,1321200768,1279255424,1236539520,
+1193079168,1148899712,1104028160,1058492032,1012317888,965533952,918168448,870250304,
+821807488,772869696,723466752,673627584,623382656,572762688,521797216,470517472,
+418954752,367139200,315102496,262876496,210491632,157979984,105373160,52703384,
+1348,-52700688,-105370472,-157977296,-210488944,-262873312,-315099840,-367136544,
+-418951616,-470514816,-521794624,-572759616,-623380096,-673625024,-723464192,-772867136,
+-821804992,-870247872,-918166016,-965531584,-1012315520,-1058489216,-1104025856,-1148897408,
+-1193076480,-1236537216,-1279253248,-1321198208,-1362347776,-1402676736,-1442160384,-1480775680,
+-1518499072,-1555307648,-1591179136,-1626092160,-1660025984,-1692959872,-1724873984,-1755749120,
+-1785566592,-1814308480,-1841956992,-1868496512,-1893910528,-1918183808,-1941301504,-1963249920,
+-1984015232,-2003585920,-2021949824,-2039095680,-2055013248,-2069692928,-2083125632,-2095303808,
+-2106219904,-2115867264,-2124240128,-2131333376,-2137142784,-2141664768,-2144896768,-2146836864,
+-2147483648,-2146836864,-2144897024,-2141665152,-2137143168,-2131333888,-2124240640,-2115867904,
+-2106220672,-2095304704,-2083126912,-2069693952,-2055014400,-2039096960,-2021951104,-2003587456,
+-1984017280,-1963251584,-1941303296,-1918185600,-1893912448,-1868498560,-1841959680,-1814310656,
+-1785568768,-1755751424,-1724876416,-1692962304,-1660028544,-1626095488,-1591182208,-1555310464,
+-1518501888,-1480778624,-1442163456,-1402680192,-1362351360,-1321201920,-1279256576,-1236540544,
+-1193079808,-1148901248,-1104029696,-1058493184,-1012319104,-965535168,-918169664,-870251072,
+-821809216,-772871424,-723468032,-673628864,-623383936,-572763520,-521799040,-470519264,
+-418956096,-367140544,-315103840,-262877328,-210492464,-157981840,-105375024,-52704732
 };
 
-uint32_t accumulators [9*12] = {0}; // Array which holds an accumulator for all notes
-
-uint32_t chorusAccumulators [9*12*4] = {0}; // Array which holds extra accumulators used in chorus mode
-
+int32_t accumulators [9*12] = {0}; // Array which holds an accumulator for all notes
+int32_t chorusAccumulators [9*12*4] = {0}; // Array which holds extra accumulators used in chorus mode
 
 uint32_t steps [1100] = {0}; // Array which holds the data which the DMA gives the DAC
+int32_t stepsNOFF [1100] = {0}; // Array with same data as steps but centred around 0
 
-uint32_t reverbArray [3300] = {0}; // Array which holds the data which the reverb function uses
+int32_t reverbArray [3300] = {0}; // Array which holds the data which the reverb function uses
 uint8_t reverbIndex = 0; // Keeps track of where in the array we should write data next
 
 // Overwrite section of array read by DMA, region determines which section (either 0 or 1) 
 extern "C" void sampleSound(uint8_t region){
   uint32_t tmpSteps [550] = {0}; // Array to temporarily hold the values which we write to steps
+  int32_t tmpStepsNOFF [550] = {0}; // Array to temporarily hold the same data as steps but centred around 0
 
   // Read in the volume
   uint8_t tmpVolume = __atomic_load_n(&volume,__ATOMIC_RELAXED);
@@ -67,7 +83,7 @@ extern "C" void sampleSound(uint8_t region){
       for(int i=0; i<9*12; i++){
         if(__atomic_load_n(&playedNotes[i],__ATOMIC_RELAXED)){
           for(int j=0; j<550; j++){
-            tmpSteps[j] = accumulators[i] >> (27-tmpVolume);
+            tmpStepsNOFF[j] = accumulators[i] >> (27-tmpVolume);
             accumulators[i] += stepSizes[i];
           }
           break;
@@ -78,7 +94,7 @@ extern "C" void sampleSound(uint8_t region){
       for(int i=0; i<9*12; i++){
         if(__atomic_load_n(&playedNotes[i],__ATOMIC_RELAXED)){
           for(int j=0; j<550; j++){
-            tmpSteps[j] += accumulators[i] >> (27-tmpVolume);
+            tmpStepsNOFF[j] += accumulators[i] >> (27-tmpVolume);
             accumulators[i] += stepSizes[i];
           }
         }
@@ -88,12 +104,12 @@ extern "C" void sampleSound(uint8_t region){
       for(int i=0; i<9*12; i++){
         if(__atomic_load_n(&playedNotes[i],__ATOMIC_RELAXED)){
           for(int j=0; j<550; j++){
-            tmpSteps[j] += uint32_t(0.70*float(accumulators[i])) >> (27-tmpVolume);
+            tmpStepsNOFF[j] += int32_t(0.70F*accumulators[i]) >> (27-tmpVolume);
             accumulators[i] += stepSizes[i];
-            tmpSteps[j] += uint32_t(0.5*float(chorusAccumulators[i])) >> (27-tmpVolume);
-            chorusAccumulators[i] += uint32_t(0.98810*float(stepSizes[i]));
-            tmpSteps[j] += uint32_t(0.5*float(chorusAccumulators[i+108])) >> (27-tmpVolume);
-            chorusAccumulators[i+108] += uint32_t(1.01189*float(stepSizes[i]));
+            tmpStepsNOFF[j] += int32_t(0.5F*chorusAccumulators[i]) >> (27-tmpVolume);
+            chorusAccumulators[i] += int32_t(0.98810F*stepSizes[i]);
+            tmpStepsNOFF[j] += int32_t(0.5F*chorusAccumulators[i+108]) >> (27-tmpVolume);
+            chorusAccumulators[i+108] += int32_t(1.01189F*stepSizes[i]);
             
           }
         }
@@ -103,16 +119,16 @@ extern "C" void sampleSound(uint8_t region){
       for(int i=0; i<9*12; i++){
         if(__atomic_load_n(&playedNotes[i],__ATOMIC_RELAXED)){
           for(int j=0; j<550; j++){
-            tmpSteps[j] += uint32_t(0.63*float(accumulators[i])) >> (27-tmpVolume);
+            tmpStepsNOFF[j] += int32_t(0.63F*accumulators[i]) >> (27-tmpVolume);
             accumulators[i] += stepSizes[i];
-            tmpSteps[j] += uint32_t(0.316*float(chorusAccumulators[i])) >> (27-tmpVolume);
-            chorusAccumulators[i] += uint32_t(0.98810*float(stepSizes[i]));
-            tmpSteps[j] += uint32_t(0.447*float(chorusAccumulators[i+108])) >> (27-tmpVolume);
-            chorusAccumulators[i+108] += uint32_t(0.99405*float(stepSizes[i]));
-            tmpSteps[j] += uint32_t(0.447*float(chorusAccumulators[i+2*108])) >> (27-tmpVolume);
-            chorusAccumulators[i+2*108] += uint32_t(1.00594*float(stepSizes[i]));
-            tmpSteps[j] += uint32_t(0.316*float(chorusAccumulators[i+3*108])) >> (27-tmpVolume);
-            chorusAccumulators[i+3*108] += uint32_t(1.01189*float(stepSizes[i]));
+            tmpStepsNOFF[j] += int32_t(0.316F*chorusAccumulators[i]) >> (27-tmpVolume);
+            chorusAccumulators[i] += int32_t(0.98810F*stepSizes[i]);
+            tmpStepsNOFF[j] += int32_t(0.447F*chorusAccumulators[i+108]) >> (27-tmpVolume);
+            chorusAccumulators[i+108] += int32_t(0.99405F*stepSizes[i]);
+            tmpStepsNOFF[j] += int32_t(0.447F*chorusAccumulators[i+2*108]) >> (27-tmpVolume);
+            chorusAccumulators[i+2*108] += int32_t(1.00594F*stepSizes[i]);
+            tmpStepsNOFF[j] += int32_t(0.316F*chorusAccumulators[i+3*108]) >> (27-tmpVolume);
+            chorusAccumulators[i+3*108] += int32_t(1.01189F*stepSizes[i]);
           }
         }
       }
@@ -121,7 +137,7 @@ extern "C" void sampleSound(uint8_t region){
       for(int i=0; i<9*12; i++){
         if(__atomic_load_n(&playedNotes[i],__ATOMIC_RELAXED)){
           for(int j=0; j<550; j++){
-            tmpSteps[j] += sine[accumulators[i]>>26] >> (27-tmpVolume);
+            tmpStepsNOFF[j] += sine[uint32_t(accumulators[i]+4294967295/2)>>25] >> (27-tmpVolume);
             accumulators[i] += stepSizes[i];
           }
         }
@@ -133,21 +149,28 @@ extern "C" void sampleSound(uint8_t region){
       break;
   }
 
+
   // Add reverb
   uint8_t tmpReverb = __atomic_load_n(&reverb,__ATOMIC_RELAXED); // Read in the reverb
     if(tmpReverb > 0){
       for(int i=0; i<550; i++){
-      tmpSteps[i] += (float(tmpReverb)/10)*float(reverbArray[i+reverbIndex*550]);
-    }
+        tmpStepsNOFF[i] *= 1.0F-float(tmpReverb)/10;
+        tmpStepsNOFF[i] += (float(tmpReverb)/10)*reverbArray[i+reverbIndex*550];
+      }
 
-    // Copy array to queue used by reverb
-    std::copy(tmpSteps, tmpSteps + 550, reverbArray + reverbIndex*550);
+    // Copy tmpStepsNOFF to queue used by reverb
+    std::copy(tmpStepsNOFF, tmpStepsNOFF + 550, reverbArray + reverbIndex*550);
 
     if(reverbIndex >= 5){
       reverbIndex = 0;
     }else{
       reverbIndex++;
     }
+  }
+
+  // Offset tmpStepsNOFF to create tmpSteps
+  for(int i = 0; i <550; i++){
+    tmpSteps[i] = uint32_t(tmpStepsNOFF[i] + 2048);
   }
 
   // Copy array to memory used by DMA 
