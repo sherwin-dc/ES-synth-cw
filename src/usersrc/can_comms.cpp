@@ -19,9 +19,16 @@
 extern "C" void CAN1_RX0_IRQHandler(void);
 extern "C" void CAN1_TX_IRQHandler(void);
 
-//Pointer to user ISRS
-void (*CAN_RX_ISR)() = NULL;
-void (*CAN_TX_ISR)() = NULL;
+// Must match the declaration in the header file
+#ifdef __cplusplus
+    //Pointer to user ISRS
+    extern "C" void (*CAN_RX_ISR_PTR)() = CAN_RX_ISR;
+    extern "C" void (*CAN_TX_ISR_PTR)() = NULL;
+#else
+    void (*CAN_RX_ISR_PTR)() = NULL;
+    void (*CAN_TX_ISR_PTR)() = NULL;
+#endif
+
 
 //CAN handle struct with initialisation parameters
 //Timing from http://www.bittiming.can-wiki.info/ with bit rate = 125kHz and clock frequency = 80MHz
@@ -147,10 +154,9 @@ uint32_t CAN_RX(uint32_t *ID, uint8_t data[8]) {
   return result;
 }
 
-/*
 uint32_t CAN_RegisterRX_ISR(void(& callback)()) {
   //Store pointer to user ISR
-  CAN_RX_ISR = &callback;
+  CAN_RX_ISR_PTR = &callback;
 
   //Enable message received interrupt in HAL
   uint32_t status = (uint32_t) HAL_CAN_ActivateNotification (&CAN_Handle, CAN_IT_RX_FIFO0_MSG_PENDING);
@@ -162,10 +168,10 @@ uint32_t CAN_RegisterRX_ISR(void(& callback)()) {
   return status;
 }
 
-
+/*
 uint32_t CAN_RegisterTX_ISR(void(& callback)()) {
   //Store pointer to user ISR
-  CAN_TX_ISR = &callback;
+  CAN_TX_ISR_PTR = &callback;
 
   //Enable message received interrupt in HAL
   uint32_t status = (uint32_t) HAL_CAN_ActivateNotification (&CAN_Handle, CAN_IT_TX_MAILBOX_EMPTY);
@@ -181,32 +187,32 @@ uint32_t CAN_RegisterTX_ISR(void(& callback)()) {
 void HAL_CAN_RxFifo0MsgPendingCallback (CAN_HandleTypeDef * hcan){
 
   //Call the user ISR if it has been registered
-  if (CAN_RX_ISR)
-    CAN_RX_ISR();
+  if (CAN_RX_ISR_PTR)
+    CAN_RX_ISR_PTR();
 }
 
 
 void HAL_CAN_TxMailbox0CompleteCallback (CAN_HandleTypeDef * hcan){
 
   //Call the user ISR if it has been registered
-  if (CAN_TX_ISR)
-    CAN_TX_ISR();
+  if (CAN_TX_ISR_PTR)
+    CAN_TX_ISR_PTR();
 }
 
 
 void HAL_CAN_TxMailbox1CompleteCallback (CAN_HandleTypeDef * hcan){
 
   //Call the user ISR if it has been registered
-  if (CAN_TX_ISR)
-    CAN_TX_ISR();
+  if (CAN_TX_ISR_PTR)
+    CAN_TX_ISR_PTR();
 }
 
 
 void HAL_CAN_TxMailbox2CompleteCallback (CAN_HandleTypeDef * hcan){
 
   //Call the user ISR if it has been registered
-  if (CAN_TX_ISR)
-    CAN_TX_ISR();
+  if (CAN_TX_ISR_PTR)
+    CAN_TX_ISR_PTR();
 }
 
 
@@ -225,9 +231,17 @@ void CAN1_TX_IRQHandler(void){
   HAL_CAN_IRQHandler(&CAN_Handle);
 }
 
-// void CAN_RX_ISR (void) {
-//     uint8_t RX_Message_ISR[8];
-//     uint32_t ID;
-//     CAN_RX(ID, RX_Message_ISR);
-//     xQueueSendFromISR(msgInQ, RX_Message_ISR, NULL);
-// }
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void CAN_RX_ISR() {
+    uint8_t RX_Message_ISR[8];
+    uint32_t ID;
+    CAN_RX(&ID, RX_Message_ISR);
+    xQueueSendFromISR(msgInQ, RX_Message_ISR, NULL);
+}
+
+#ifdef __cplusplus
+}
+#endif

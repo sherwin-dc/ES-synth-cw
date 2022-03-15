@@ -138,6 +138,7 @@ int main(void)
 
   CAN_Init(true);
   setCANFilter(0x123, 0x7ff, 0);
+  CAN_RegisterRX_ISR(CAN_RX_ISR);
   CAN_Start();
 
   // Initialise CAN message queue
