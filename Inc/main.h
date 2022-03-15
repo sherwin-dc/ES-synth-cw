@@ -44,13 +44,16 @@ typedef uint8_t boardkeys_t[28]; // Type used to hold the state of keys
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
 extern SemaphoreHandle_t keyArrayMutex; // Handle for mutex used when accessing keyArray
-extern boardkeys_t keyArray;
+extern volatile boardkeys_t keyArray;
 
-extern uint8_t volume; // Global variable which stores volume of piano
-extern uint8_t octave; // Global variable which stores octave of piano
-extern uint8_t sound; // Global variable which stores sound type of piano
-extern uint8_t reverb; // Global variable which stores reverb of piano
-extern uint8_t screenOffset; // Global variable which stores offset of what's displayed on the screen
+extern SemaphoreHandle_t playedNotesMutex; // Handle for mutex used when accessing playedNotes
+extern volatile uint8_t playedNotes [9*12]; // Global variable which is used to access the state notes
+
+extern volatile uint8_t volume; // Global variable which stores volume of piano
+extern volatile uint8_t octave; // Global variable which stores octave of piano
+extern volatile uint8_t sound; // Global variable which stores sound type of piano
+extern volatile uint8_t reverb; // Global variable which stores reverb of piano
+extern volatile uint8_t screenOffset; // Global variable which stores offset of what's displayed on the screen
 
 // Stores outgoing messages on the CAN Bus
 extern volatile uint8_t TX_Message[8];

@@ -135,10 +135,18 @@ void knobDecode(boardkeys_t newKeys) {
             __atomic_store_n(&volume,tmpVolume,__ATOMIC_RELAXED);
       }
 
-      if(knobRotation[1] != 0){ // Update octave
+      if(knobRotation[1] != 0){ // Update octave and reset notes played
             int tmpOctave= int(__atomic_load_n(&octave,__ATOMIC_RELAXED)) + knobRotation[1];
-            tmpOctave = std::min(std::max(int(tmpOctave),0),9);
+            tmpOctave = std::min(std::max(int(tmpOctave),0),8);
             __atomic_store_n(&octave,tmpOctave,__ATOMIC_RELAXED);
+
+            //Reset notes played (This is to make sure that no note in the notesPlayed array will never
+            // turn off if we change the octave while a note is being played)
+            xSemaphoreTake(playedNotesMutex, portMAX_DELAY);
+            for(int i=0; i<9*12; i++){
+                  playedNotes[i] = 0; 
+            }
+            xSemaphoreGive(playedNotesMutex);
       }
 
       if(knobRotation[2] != 0){ // Update sound
@@ -188,6 +196,14 @@ void scanKeysTask(void * params) {
                   // keyPressed[i*4+3] = (keys & (uint8_t)0x08) >> 3;
             }
 
+            //Update which notes are being played
+            uint8_t tmpOctave = __atomic_load_n(&octave,__ATOMIC_RELAXED);
+            xSemaphoreTake(playedNotesMutex, portMAX_DELAY);
+            for(int i=0; i<12; i++){
+                  playedNotes[12*tmpOctave + i] = !keyPressed[i]; 
+            }
+            xSemaphoreGive(playedNotesMutex);
+
             // Decode whether any of the knobs are being turned
             // ! And if key state has changed since previous iteration
             knobDecode(keyPressed);
@@ -207,7 +223,7 @@ void scanKeysTask(void * params) {
 
             // Write the state of each key to the keyArray
             xSemaphoreTake(keyArrayMutex, portMAX_DELAY);
-            memcpy(keyArray,keyPressed,sizeof(keyArray));
+            memcpy((void*)keyArray,keyPressed,sizeof(keyArray));
             xSemaphoreGive(keyArrayMutex);
 
 
@@ -217,7 +233,7 @@ void scanKeysTask(void * params) {
 
 void init_keydetect() {
       DEBUG_PRINT("Initialising Detect Keys");
-      if (xTaskCreate(scanKeysTask, "Detect keys", 128, NULL, 5, NULL) != pdPASS) {
+      if (xTaskCreate(scanKeysTask, "Detect keys", 128, NULL, 2, NULL) != pdPASS) {
             DEBUG_PRINT("ERROR");
             print(xPortGetFreeHeapSize());
       }

@@ -56,13 +56,16 @@
 
 /* USER CODE BEGIN PV */
 SemaphoreHandle_t keyArrayMutex; // Handle for mutex used when accessing keyArray
-boardkeys_t keyArray; // Global variable which is used to access the state of keys
+volatile boardkeys_t keyArray; // Global variable which is used to access the state of keys
 
-uint8_t volume = 7; // Global variable which stores volume of piano
-uint8_t octave = 4; // Global variable which stores octave of piano
-uint8_t sound = 0; // Global variable which stores sound type of piano
-uint8_t reverb = 0; // Global variable which stores reverb of piano
-uint8_t screenOffset = 0; // Global variable which stores offset of what's displayed on the screen
+SemaphoreHandle_t playedNotesMutex; // Handle for mutex used when accessing playedNotes
+volatile uint8_t playedNotes [9*12] = {0}; // Global variable which is used to access the state notes
+
+volatile uint8_t volume = 3; // Global variable which stores volume of piano
+volatile uint8_t octave = 4; // Global variable which stores octave of piano
+volatile uint8_t sound = 0; // Global variable which stores sound type of piano
+volatile uint8_t reverb = 0; // Global variable which stores reverb of piano
+volatile uint8_t screenOffset = 0; // Global variable which stores offset of what's displayed on the screen
 
 volatile uint8_t TX_Message[8] = {0}; // Stores outgoing messages on the CAN Bus
 

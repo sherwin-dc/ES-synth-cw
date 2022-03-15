@@ -128,7 +128,7 @@ void update_lcd(void * params) {
   boardkeys_t tmp_keyArray;
 
   std::vector<std::string> notes = {"C","C#","D","D#","E","F","F#","G","G#","A","A#","B"};
-  std::vector<std::string> sounds = {"SAWTOOTH","1","2","3","4","5","6","7","8","9"};
+  std::vector<std::string> sounds = {"SAWTOOTH","SINEWAVE","2","3","4","5","6","7","8","9"};
 
   while (1) {
     // START_TIMING
@@ -141,7 +141,7 @@ void update_lcd(void * params) {
 
     // Write out which keys are being pressed
     xSemaphoreTake(keyArrayMutex, portMAX_DELAY);
-    memcpy(tmp_keyArray,keyArray,sizeof(keyArray));
+    memcpy(tmp_keyArray,(void*)keyArray,sizeof(tmp_keyArray));
     xSemaphoreGive(keyArrayMutex);
 
     char tmp0 [40] = "NOTES: ";
@@ -182,7 +182,7 @@ void update_lcd(void * params) {
     // Send the buffer to the LCD
     u8g2_SendBuffer(&u8g2);
 
-    DEBUG_PRINT("LCD running")
+    //DEBUG_PRINT("LCD running")
 
     // Toggle MCU LED
     HAL_GPIO_TogglePin(GPIOB, LED_BUILTIN_Pin);
@@ -215,7 +215,7 @@ void init_lcd() {
 void start_lcd_thread() {
 
   DEBUG_PRINT("Initialising Refresh LCD");
-  if (xTaskCreate(update_lcd, "Refresh LCD", 512, NULL, 4, NULL) != pdPASS ) {
+  if (xTaskCreate(update_lcd, "Refresh LCD", 128, NULL, 1, NULL) != pdPASS ) {
     DEBUG_PRINT("Error. Free memory: ");
     print(xPortGetFreeHeapSize());
   }
