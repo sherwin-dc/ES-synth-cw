@@ -69,6 +69,7 @@ volatile uint8_t reverb = 0; // Global variable which stores reverb of piano
 volatile uint8_t screenOffset = 0; // Global variable which stores offset of what's displayed on the screen
 
 QueueHandle_t msgInQ;
+uint8_t RX_Message[8] = {0, 0, 0};
 
 /* USER CODE END PV */
 
@@ -136,13 +137,15 @@ int main(void)
 
   init_sound();
 
+  // Initialise CAN message queue
+  msgInQ = xQueueCreate(36,8);
+
+  // Initialize CAN bus
   CAN_Init(true);
   setCANFilter(0x123, 0x7ff, 0);
   CAN_RegisterRX_ISR(CAN_RX_ISR);
   CAN_Start();
 
-  // Initialise CAN message queue
-  msgInQ = xQueueCreate(36,8);
   /* USER CODE END 2 */
 
   /* Init scheduler */

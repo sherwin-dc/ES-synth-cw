@@ -28,10 +28,14 @@ uint32_t CAN_RX(uint32_t *ID, uint8_t data[8]);
 void CAN_RX_ISR();
 
 // Set up an interrupt on received messages
-uint32_t CAN_RegisterRX_ISR(void(& callback)());
+uint32_t CAN_RegisterRX_ISR(void(*callback)());
 
 //Set up an interrupt on transmitted messages
-// uint32_t CAN_RegisterTX_ISR(void(& callback)());
+// uint32_t CAN_RegisterTX_ISR(void(*callback)());
+
+void decodeCANMessages(void* params);
+
+void init_can_rx_decode();
 
 #ifdef __cplusplus
 }

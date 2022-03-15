@@ -22,7 +22,7 @@ extern "C" void CAN1_TX_IRQHandler(void);
 // Must match the declaration in the header file
 #ifdef __cplusplus
     //Pointer to user ISRS
-    extern "C" void (*CAN_RX_ISR_PTR)() = CAN_RX_ISR;
+    extern "C" void (*CAN_RX_ISR_PTR)() = NULL;
     extern "C" void (*CAN_TX_ISR_PTR)() = NULL;
 #else
     void (*CAN_RX_ISR_PTR)() = NULL;
@@ -154,9 +154,9 @@ uint32_t CAN_RX(uint32_t *ID, uint8_t data[8]) {
   return result;
 }
 
-uint32_t CAN_RegisterRX_ISR(void(& callback)()) {
+uint32_t CAN_RegisterRX_ISR(void(*callback)()) {
   //Store pointer to user ISR
-  CAN_RX_ISR_PTR = &callback;
+  CAN_RX_ISR_PTR = callback;
 
   //Enable message received interrupt in HAL
   uint32_t status = (uint32_t) HAL_CAN_ActivateNotification (&CAN_Handle, CAN_IT_RX_FIFO0_MSG_PENDING);
@@ -245,3 +245,27 @@ void CAN_RX_ISR() {
 #ifdef __cplusplus
 }
 #endif
+
+// Create a decode thread to handle incoming CAN messages
+void decodeCANMessages(void *params) {
+    // DEBUG_PRINT("~");
+    while(1){
+        // DEBUG_PRINT("!");
+        // if ( xQueueReceive(msgInQ, RX_Message, portMAX_DELAY)  == pdPASS ){
+        if ( xQueueReceive(msgInQ, RX_Message, 0)  == pdPASS ){
+            DEBUG_PRINT("can rx smth");
+        } else {
+            // DEBUG_PRINT("x");
+        }
+    }
+
+}
+
+void init_can_rx_decode(){
+    DEBUG_PRINT("Initializing CAN RX Decode");
+    xQueueReset(msgInQ);
+    if (xTaskCreate(decodeCANMessages, "CAN RX ISR", 64, NULL, 1, NULL) != pdPASS) {
+        DEBUG_PRINT("Error. Free memory: ");
+        print(xPortGetFreeHeapSize());
+    }
+}

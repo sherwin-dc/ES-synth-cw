@@ -57,6 +57,9 @@ extern volatile uint8_t screenOffset; // Global variable which stores offset of 
 
 // handles incoming messages
 extern QueueHandle_t msgInQ;
+
+// CAN recieve buffer
+extern uint8_t RX_Message[8];
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/
