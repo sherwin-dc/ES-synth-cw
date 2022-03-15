@@ -112,14 +112,18 @@ void knobDecode(boardkeys_t newKeys, uint8_t* TX_Message_Ptr) {
             if (oldKeyState ^ newKeyState) {
                   anyKeyPressed = true;
                   // TODO: Add this to a queue so that multiple simultaneous key presses are also reflected
-                  TX_Message_Ptr[1] = i;
-                  TX_Message_Ptr[2] = octave;
+                  // TX_Message_Ptr[1] = i;                  
+                  // TX_Message_Ptr[2] = octave;                  
+                  
+                  TX_Message_Ptr[1] = i + 48;
+                  TX_Message_Ptr[2] = octave + 48;
 
                   // Button has been pressed
                   if (oldKeyState==1)      { TX_Message_Ptr[0] = 'P'; }
                   // Button has been released
                   else if (oldKeyState==0) { TX_Message_Ptr[0] = 'R'; }
 
+                  DEBUG_PRINT("TX CAN MSG");
                   CAN_TX(0x123, TX_Message_Ptr);      // Transmit message over CAN
             } 
       }
