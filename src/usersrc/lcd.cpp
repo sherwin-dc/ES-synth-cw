@@ -127,11 +127,19 @@ void update_lcd(void * params) {
   TickType_t xLastWakeTime = xTaskGetTickCount();
   boardkeys_t tmp_keyArray;
 
+  // maybe this can be global somewhere?
   std::vector<std::string> notes = {"C","C#","D","D#","E","F","F#","G","G#","A","A#","B"};
   std::vector<std::string> sounds = {"SAWTOOTH","POLYPHONY","SINEWAVE","CHORUS","4","5","6","7","8","9"};
 
   while (1) {
     // START_TIMING
+    
+    // CAN Bus stuff
+    // uint32_t CAN_RX_ID;
+    // Poll for recieved messages
+    // while (CAN_CheckRXLevel()) {
+    //   CAN_RX( &CAN_RX_ID, RX_Message );
+    // }
 
     u8g2_ClearBuffer(&u8g2); // Clear content on screen
     u8g2_SetFont(&u8g2, u8g2_font_smallsimple_tr); // Set font size
@@ -178,6 +186,8 @@ void update_lcd(void * params) {
     tmp4[8] = __atomic_load_n(&reverb,__ATOMIC_RELAXED) + 48;
     u8g2_DrawStr(&u8g2, 70, 15 - tmpOffset, tmp4);  // write string to display
 
+    // Print out CAN Rx Buffer
+    u8g2_DrawStr(&u8g2, 70, 7, (char *)RX_Message);
 
     // Send the buffer to the LCD
     u8g2_SendBuffer(&u8g2);

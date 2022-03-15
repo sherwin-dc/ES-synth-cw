@@ -55,11 +55,11 @@ extern volatile uint8_t sound; // Global variable which stores sound type of pia
 extern volatile uint8_t reverb; // Global variable which stores reverb of piano
 extern volatile uint8_t screenOffset; // Global variable which stores offset of what's displayed on the screen
 
-// Stores outgoing messages on the CAN Bus
-extern volatile uint8_t TX_Message[8];
-
 // handles incoming messages
 extern QueueHandle_t msgInQ;
+
+// CAN recieve buffer
+extern uint8_t RX_Message[8];
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/

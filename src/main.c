@@ -35,6 +35,7 @@
 #include "delay.h"
 #include "keymat.h"
 #include "joystick.h"
+#include "can_comms.h"
 #include <stdbool.h> // contains true and false
 /* USER CODE END Includes */
 
@@ -67,9 +68,8 @@ volatile uint8_t sound = 0; // Global variable which stores sound type of piano
 volatile uint8_t reverb = 0; // Global variable which stores reverb of piano
 volatile uint8_t screenOffset = 0; // Global variable which stores offset of what's displayed on the screen
 
-volatile uint8_t TX_Message[8] = {0}; // Stores outgoing messages on the CAN Bus
-
 QueueHandle_t msgInQ;
+uint8_t RX_Message[8] = {0, 0, 0};
 
 /* USER CODE END PV */
 
@@ -133,16 +133,17 @@ int main(void)
   DEBUG_PRINT("HELLO WORLD");
 
   init_lcd();
-  DEBUG_PRINT("Hello World!");  
-
+  DEBUG_PRINT("Hello World!");
   init_sound();
-
-  // CAN_INIT(true);
-  // setCANFilter(0x123, 0x7ff, 0);
-  // CAN_Start();
 
   // Initialise CAN message queue
   msgInQ = xQueueCreate(36,8);
+
+  // Initialize CAN bus
+  setCANFilter(0x123, 0x7ff, 0);
+  CAN_RegisterRX_ISR(CAN_RX_ISR);
+  CAN_Start();
+
   /* USER CODE END 2 */
 
   /* Init scheduler */

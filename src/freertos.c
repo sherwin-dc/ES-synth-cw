@@ -36,6 +36,7 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 extern void start_lcd_thread();
+extern void init_can_rx_decode();
 extern void init_keydetect();
 /* USER CODE END PD */
 
@@ -102,8 +103,11 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   start_lcd_thread();
-   DEBUG_PRINT("HELLO WORLD2");
+  DEBUG_PRINT("HELLO WORLD2");
   init_keydetect();
+  DEBUG_PRINT("Keypress Detect Thread Started");
+  init_can_rx_decode();
+  DEBUG_PRINT("CAN Rx Buffer Thread Started");
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */
