@@ -5,7 +5,6 @@
 #include "dma.h"
 #include "main.h"
 
-//#include <math.h> // sin()
 #include <algorithm> // std::copy
 #include <cstring> // Contains the memcpy function
 
@@ -51,13 +50,6 @@ uint32_t steps [2200] = {0}; // Array which holds the data which the DMA gives t
 // Overwrite section of array read by DMA, region determines which section (either 0 or 1) 
 extern "C" void sampleSound(uint8_t region){
   uint32_t tmpSteps [1100] = {0}; // Array to temporarily hold the values which we write to steps
-  
-  // Create a copy of the playedNotes array
-  uint8_t tmpNotes [9*12];
-  // NEED TO FIND SOMEHOW TO PROTECT MEMORY
-  //xSemaphoreTake(playedNotesMutex, portMAX_DELAY);
-  memcpy(tmpNotes,(void*)playedNotes,sizeof(tmpNotes));
-  //xSemaphoreGive(playedNotesMutex);
 
   // Read in the volume
   uint8_t tmpVolume = __atomic_load_n(&volume,__ATOMIC_RELAXED);
@@ -66,7 +58,7 @@ extern "C" void sampleSound(uint8_t region){
   switch(__atomic_load_n(&sound,__ATOMIC_RELAXED)) {
     case 1: // Polyphony
       for(int i=0; i<9*12; i++){
-        if(tmpNotes[i]){
+        if(__atomic_load_n(&playedNotes[i],__ATOMIC_RELAXED)){
           for(int j=0; j<1100; j++){
             tmpSteps[j] += accumulators[i] >> (27-tmpVolume);
             accumulators[i] += stepSizes[i];
@@ -76,7 +68,7 @@ extern "C" void sampleSound(uint8_t region){
       break;
     case 2: // Sinewave
       for(int i=0; i<9*12; i++){
-        if(tmpNotes[i]){
+        if(__atomic_load_n(&playedNotes[i],__ATOMIC_RELAXED)){
           for(int j=0; j<1100; j++){
             tmpSteps[j] += sine[accumulators[i]>>26] >> (27-tmpVolume);
             accumulators[i] += stepSizes[i];
@@ -86,14 +78,14 @@ extern "C" void sampleSound(uint8_t region){
       break;
     case 3: // Chorus
       for(int i=0; i<9*12; i++){
-        if(tmpNotes[i]){
+        if(__atomic_load_n(&playedNotes[i],__ATOMIC_RELAXED)){
 
         }
       }
       break;
     default: // Sawtooth
       for(int i=0; i<9*12; i++){
-        if(tmpNotes[i]){
+        if(__atomic_load_n(&playedNotes[i],__ATOMIC_RELAXED)){
           for(int j=0; j<1100; j++){
             tmpSteps[j] = accumulators[i] >> (27-tmpVolume);
             accumulators[i] += stepSizes[i];

@@ -46,7 +46,6 @@ typedef uint8_t boardkeys_t[28]; // Type used to hold the state of keys
 extern SemaphoreHandle_t keyArrayMutex; // Handle for mutex used when accessing keyArray
 extern volatile boardkeys_t keyArray;
 
-extern SemaphoreHandle_t playedNotesMutex; // Handle for mutex used when accessing playedNotes
 extern volatile uint8_t playedNotes [9*12]; // Global variable which is used to access the state notes
 
 extern volatile uint8_t volume; // Global variable which stores volume of piano

@@ -78,7 +78,6 @@ void MX_FREERTOS_Init(void) {
 
   /* USER CODE BEGIN RTOS_MUTEX */
   keyArrayMutex = xSemaphoreCreateMutex(); // Instantiate a mutex for the keyArray
-  playedNotesMutex = xSemaphoreCreateMutex(); // Instantiate a mutex for playedNotes
   /* USER CODE END RTOS_MUTEX */
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */

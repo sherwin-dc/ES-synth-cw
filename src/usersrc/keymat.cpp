@@ -149,11 +149,10 @@ void knobDecode(boardkeys_t newKeys, uint8_t* TX_Message_Ptr) {
 
             //Reset notes played (This is to make sure that no note in the notesPlayed array will never
             // turn off if we change the octave while a note is being played)
-            xSemaphoreTake(playedNotesMutex, portMAX_DELAY);
             for(int i=0; i<9*12; i++){
-                  playedNotes[i] = 0; 
+                  __atomic_store_n(&playedNotes[i],0,__ATOMIC_RELAXED);
             }
-            xSemaphoreGive(playedNotesMutex);
+
       }
 
       if(knobRotation[2] != 0){ // Update sound
@@ -206,11 +205,9 @@ void scanKeysTask(void * params) {
 
             //Update which notes are being played
             uint8_t tmpOctave = __atomic_load_n(&octave,__ATOMIC_RELAXED);
-            xSemaphoreTake(playedNotesMutex, portMAX_DELAY);
             for(int i=0; i<12; i++){
-                  playedNotes[12*tmpOctave + i] = !keyPressed[i]; 
+                  __atomic_store_n(&playedNotes[12*tmpOctave + i],!keyPressed[i],__ATOMIC_RELAXED);
             }
-            xSemaphoreGive(playedNotesMutex);
 
             // Decode whether any of the knobs are being turned
             // ! And if key state has changed since previous iteration
