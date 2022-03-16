@@ -136,14 +136,14 @@ void knobDecode(boardkeys_t newKeys, uint8_t* TX_Message_Ptr) {
       }
 
       // Update related global variables
-      if(knobRotation[0] != 0){ // Update volume
-            int tmpVolume= int(__atomic_load_n(&volume,__ATOMIC_RELAXED)) + knobRotation[0];
+      if(knobRotation[3] != 0){ // Update volume
+            int tmpVolume= int(__atomic_load_n(&volume,__ATOMIC_RELAXED)) + knobRotation[3];
             tmpVolume = std::min(std::max(int(tmpVolume),0),7);
             __atomic_store_n(&volume,tmpVolume,__ATOMIC_RELAXED);
       }
 
-      if(knobRotation[1] != 0){ // Update octave and reset notes played
-            int tmpOctave= int(__atomic_load_n(&octave,__ATOMIC_RELAXED)) + knobRotation[1];
+      if(knobRotation[2] != 0){ // Update octave and reset notes played
+            int tmpOctave= int(__atomic_load_n(&octave,__ATOMIC_RELAXED)) + knobRotation[2];
             tmpOctave = std::min(std::max(int(tmpOctave),0),8);
             __atomic_store_n(&octave,tmpOctave,__ATOMIC_RELAXED);
 
@@ -155,14 +155,14 @@ void knobDecode(boardkeys_t newKeys, uint8_t* TX_Message_Ptr) {
 
       }
 
-      if(knobRotation[2] != 0){ // Update sound
-            int tmpSound= int(__atomic_load_n(&sound,__ATOMIC_RELAXED)) + knobRotation[2];
+      if(knobRotation[1] != 0){ // Update sound
+            int tmpSound= int(__atomic_load_n(&sound,__ATOMIC_RELAXED)) + knobRotation[1];
             tmpSound = std::min(std::max(int(tmpSound),0),9);
             __atomic_store_n(&sound,tmpSound,__ATOMIC_RELAXED);
       }
 
-      if(knobRotation[3] != 0){ // Update reverb
-            int tmpReverb = int(__atomic_load_n(&reverb,__ATOMIC_RELAXED)) + knobRotation[3];
+      if(knobRotation[0] != 0){ // Update reverb
+            int tmpReverb = int(__atomic_load_n(&reverb,__ATOMIC_RELAXED)) + knobRotation[0];
             tmpReverb = std::min(std::max(int(tmpReverb),0),9);
             __atomic_store_n(&reverb,tmpReverb,__ATOMIC_RELAXED);
       }

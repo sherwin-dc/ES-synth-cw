@@ -120,7 +120,6 @@ uint8_t u8x8_gpio_and_delay(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *ar
 
 
 
-
 void update_lcd(void * params) {
 
   const TickType_t xFrequency = 100/portTICK_PERIOD_MS;
@@ -128,7 +127,7 @@ void update_lcd(void * params) {
 
   // maybe this can be global somewhere?
   std::vector<std::string> notes = {"C","C#","D","D#","E","F","F#","G","G#","A","A#","B"};
-  std::vector<std::string> sounds = {"SAWTOOTH","POLYPHONY","CHORUS","LASER","SINEWAVE","5","6","7","8","9"};
+  std::vector<std::string> sounds = {"SAW","POLY","CHORUS","LASER","SINE","5","6","7","8","9"};
 
   while (1) {
     // START_TIMING
@@ -162,27 +161,36 @@ void update_lcd(void * params) {
     u8g2_DrawStr(&u8g2, 2, 7 - tmpOffset, tmp0);  // write string to display
 
     // Write out the volume
-    char tmp1 [30] = "VOLUME: ";
-    tmp1[8] = __atomic_load_n(&volume,__ATOMIC_RELAXED) + 48;
+    char tmp1 [30] = "1. VOLUME: ";
+    tmp1[11] = __atomic_load_n(&volume,__ATOMIC_RELAXED) + 48;
     u8g2_DrawStr(&u8g2, 2, 15 - tmpOffset, tmp1);  // write string to display
 
     // Write out the octave
-    char tmp2 [30] = "OCTAVE: ";
-    tmp2[8] = __atomic_load_n(&octave,__ATOMIC_RELAXED) + 48;
-    u8g2_DrawStr(&u8g2, 2, 23 - tmpOffset, tmp2);  // write string to display
+    char tmp2 [30] = "2. OCTAVE: ";
+    tmp2[11] = __atomic_load_n(&octave,__ATOMIC_RELAXED) + 48;
+    u8g2_DrawStr(&u8g2, 75, 15 - tmpOffset, tmp2);  // write string to display
 
     // Write out the sound
-    char tmp3 [30] = "SOUND: ";
+    char tmp3 [30] = "3. SOUND: ";
     strcat(tmp3,sounds[__atomic_load_n(&sound,__ATOMIC_RELAXED)].c_str());
-    u8g2_DrawStr(&u8g2, 2, 31 - tmpOffset, tmp3);  // write string to display
+    u8g2_DrawStr(&u8g2, 2, 23 - tmpOffset, tmp3);  // write string to display
 
     // Write out the reverb
-    char tmp4 [30] = "REVERB: ";
-    tmp4[8] = __atomic_load_n(&reverb,__ATOMIC_RELAXED) + 48;
-    u8g2_DrawStr(&u8g2, 70, 15 - tmpOffset, tmp4);  // write string to display
+    char tmp4 [30] = "4. REVERB: ";
+    tmp4[11] = __atomic_load_n(&reverb,__ATOMIC_RELAXED) + 48;
+    u8g2_DrawStr(&u8g2, 75, 23 - tmpOffset, tmp4);  // write string to display
+
+    // Draw out menu screen on bottom
+    u8g2_DrawStr(&u8g2, 2, 31 - tmpOffset, "1");
+    u8g2_DrawStr(&u8g2, 42, 31 - tmpOffset, "2");
+    u8g2_DrawStr(&u8g2, 82, 31 - tmpOffset, "3");
+    u8g2_DrawStr(&u8g2, 122, 31 - tmpOffset, "4");
+
+
 
     // Print out CAN Rx Buffer
     u8g2_DrawStr(&u8g2, 70, 7, (char *)RX_Message);
+
 
     // Send the buffer to the LCD
     u8g2_SendBuffer(&u8g2);
