@@ -125,7 +125,6 @@ void update_lcd(void * params) {
 
   const TickType_t xFrequency = 100/portTICK_PERIOD_MS;
   TickType_t xLastWakeTime = xTaskGetTickCount();
-  boardkeys_t tmp_keyArray;
 
   // maybe this can be global somewhere?
   std::vector<std::string> notes = {"C","C#","D","D#","E","F","F#","G","G#","A","A#","B"};
@@ -147,17 +146,14 @@ void update_lcd(void * params) {
     // Variable used to position data on screen
     uint8_t tmpOffset = __atomic_load_n(&screenOffset,__ATOMIC_RELAXED);
 
-    // Write out which keys are being pressed
-    xSemaphoreTake(keyArrayMutex, portMAX_DELAY);
-    memcpy(tmp_keyArray,(void*)keyArray,sizeof(tmp_keyArray));
-    xSemaphoreGive(keyArrayMutex);
-
     char tmp0 [40] = "NOTES: ";
-    for(int i=0; i < 12; i++){
-      if(!tmp_keyArray[i]){
+    for(int i=0; i < 9*12; i++){
+      if(__atomic_load_n(&playedNotes[i],__ATOMIC_RELAXED)){
         char tmpNote[1024];
-        strcpy(tmpNote, notes[i].c_str());
+        strcpy(tmpNote, notes[i%12].c_str());
         strcat(tmp0,tmpNote);
+        tmp0[strlen(tmp0)] = uint8_t(i/12) + 48;
+        tmp0[strlen(tmp0)] = '\0';
         strcat(tmp0," ");
       }
     }
@@ -177,7 +173,6 @@ void update_lcd(void * params) {
 
     // Write out the sound
     char tmp3 [30] = "SOUND: ";
-    //tmp3[7] = __atomic_load_n(&sound,__ATOMIC_RELAXED) + 48;
     strcat(tmp3,sounds[__atomic_load_n(&sound,__ATOMIC_RELAXED)].c_str());
     u8g2_DrawStr(&u8g2, 2, 31 - tmpOffset, tmp3);  // write string to display
 

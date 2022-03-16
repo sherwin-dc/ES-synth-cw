@@ -181,7 +181,6 @@ void scanKeysTask(void * params) {
 
             // Array of piano keys which are pressed
             boardkeys_t keyPressed;
-            // boardkeys_t keyChanges = {0};
             
             // Check the state of each key
             for (int i = 0;i < 7; i++){
@@ -193,14 +192,9 @@ void scanKeysTask(void * params) {
                   for (int j=0; j< 4; j++){
                         uint8_t bitmask = 1 << j;
                         uint8_t bitShiftedResult = (keys & bitmask) >> j;
-                        // keyChanges[i*4 + j] = keyPressed[i*4 + j] ^ bitShiftedResult;
                         keyPressed[i*4 + j] = bitShiftedResult;
                   }
 
-                  // keyPressed[i*4]   = (keys & (uint8_t)0x01) >> 0;
-                  // keyPressed[i*4+1] = (keys & (uint8_t)0x02) >> 1;
-                  // keyPressed[i*4+2] = (keys & (uint8_t)0x04) >> 2;
-                  // keyPressed[i*4+3] = (keys & (uint8_t)0x08) >> 3;
             }
 
             //Update which notes are being played
@@ -225,11 +219,6 @@ void scanKeysTask(void * params) {
             u8g2_SendBuffer(&u8g2);
             // ~ end debug code
             */
-
-            // Write the state of each key to the keyArray
-            xSemaphoreTake(keyArrayMutex, portMAX_DELAY);
-            memcpy((void*)keyArray,keyPressed,sizeof(keyArray));
-            xSemaphoreGive(keyArrayMutex);
 
             vTaskDelayUntil( &xLastWakeTime, xFrequency );
       }

@@ -5,12 +5,10 @@
 #include "dma.h"
 #include "main.h"
 
-#include <math.h>
 #include <algorithm> // std::copy
-#include <cstring> // Contains the memcpy function
 
 
-// Step sizes needed to overflow uint32_t at correct frequency if accumulated at 22 kHz
+// Step sizes needed to overflow int32_t at correct frequency if accumulated at 22 kHz
 //(Calculate index by 12*octave + index of note)
 const int32_t stepSizes [9*12] = { 
   3511538,3720246,3941437,4175916,4424219,4687285,4966055,5261334,5574062,5905580,6256693,6628745,
@@ -69,13 +67,17 @@ int32_t stepsNOFF [1100] = {0}; // Array with same data as steps but centred aro
 int32_t reverbArray [3300] = {0}; // Array which holds the data which the reverb function uses
 uint8_t reverbIndex = 0; // Keeps track of where in the array we should write data next
 
+
+
 // Overwrite section of array read by DMA, region determines which section (either 0 or 1) 
 extern "C" void sampleSound(uint8_t region){
+
   uint32_t tmpSteps [550] = {0}; // Array to temporarily hold the values which we write to steps
   int32_t tmpStepsNOFF [550] = {0}; // Array to temporarily hold the same data as steps but centred around 0
 
   // Read in the volume
   uint8_t tmpVolume = __atomic_load_n(&volume,__ATOMIC_RELAXED);
+
 
   // Calculate what the array should be for the next iteration
   switch(__atomic_load_n(&sound,__ATOMIC_RELAXED)) {
@@ -178,6 +180,8 @@ extern "C" void sampleSound(uint8_t region){
 
 }
 
+
+
 extern "C" void init_sound() {
   HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_1, (uint32_t *) steps, 1100, DAC_ALIGN_12B_R);
   HAL_TIM_Base_Start(&htim2);
@@ -189,6 +193,8 @@ extern "C" void init_sound() {
   //HAL_DAC_Stop_DMA(&hdac1, DAC_CHANNEL_1);
 
 }
+
+
 
 void HAL_DAC_ConvHalfCpltCallbackCh1(DAC_HandleTypeDef *hdac) {
   sampleSound(0); // Overwrite first half of steps array

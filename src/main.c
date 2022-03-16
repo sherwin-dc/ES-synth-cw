@@ -56,9 +56,6 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-SemaphoreHandle_t keyArrayMutex; // Handle for mutex used when accessing keyArray
-volatile boardkeys_t keyArray; // Global variable which is used to access the state of keys
-
 volatile uint8_t playedNotes [9*12] = {0}; // Global variable which is used to access the state notes
 
 volatile uint8_t volume = 3; // Global variable which stores volume of piano
