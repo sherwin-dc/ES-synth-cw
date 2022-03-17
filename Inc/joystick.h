@@ -5,8 +5,9 @@
 extern "C" {
 #endif
 
-uint8_t readJoystick();
+void readJoystick(void * params);
 void init_joystick();
+int8_t normaliseJoystick(uint32_t value, uint32_t min, uint32_t mid, uint32_t max);
 
 #ifdef __cplusplus
 }
