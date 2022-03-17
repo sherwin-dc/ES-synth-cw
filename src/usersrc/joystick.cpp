@@ -17,7 +17,7 @@ const uint32_t xy_max = 4096;
 
 
 //JOYSTICK SHOULD BE USED TO MODULATE THE FREQUENCY 
-void readJoystick() {
+void readJoystick(void* params) {
     while (1) {
         HAL_ADC_Start(&hadc1);
         HAL_ADC_PollForConversion(&hadc1, joystickMaxDelay);
