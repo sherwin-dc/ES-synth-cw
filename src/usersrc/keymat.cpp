@@ -3,6 +3,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "keymat.h"
+#include "Knob.hpp"
 
 // for debug only
 #include "lcd.h"
@@ -11,10 +12,12 @@
 #include "main.h"
 
 #include <cstring> // Contains the memcpy function
-#include <algorithm> // Contains max and min functions
 
 QueueHandle_t boardkeys;
 QueueHandle_t boardknobs; 
+
+// this is a local variable in the cpp
+Knob knobs[4];
 
 void setOutMuxBit(const uint8_t bitIdx, const int value) {
       HAL_GPIO_WritePin(Row_Sel_En_GPIO_Port, Row_Sel_En_Pin, GPIO_PIN_RESET);
@@ -69,37 +72,18 @@ void setRow(uint8_t rowIdx) {
 
 // Check whether knobs are being turned
 // ! Also detects whether keys state has been changed
+// can we change the fucntion name?
 void knobDecode(boardkeys_t newKeys, uint8_t* TX_Message_Ptr) {
 
       // Static variable holding the keys from the last time the function was called
       static boardkeys_t oldKeys = {0};
 
-      // Array which hold the information whether a knob is turned to the left (-1) or right (1), or not at all (0)
-      int8_t knobRotation [4] = {0};
-
-      // Check whether any of the keys have been moved forward or backwards
-      // We only care about transitions from states 00 or 11, to states 01 or 10.
       for (int i=0; i<4; i++){
             uint8_t oldState = (oldKeys[12+i*2]<<1) + (oldKeys[13+i*2]); // Calculate previous state
             uint8_t newState = (newKeys[12+i*2]<<1) + (newKeys[13+i*2]); // Calculate current state
 
-            switch (oldState){
-                  case 0x00:
-                        if(newState == 0x01){
-                              knobRotation[i] = -1; // Turning left
-                        }else if(newState == 0x02){
-                              knobRotation[i] = 1; // Turning right
-                        }
-                        break;
-                  case 0x03:
-                        if(newState == 0x01){
-                              knobRotation[i] = 1; // Turning right
-                        }else if(newState == 0x02){
-                              knobRotation[i] = -1; // Turning left
-                        }
-                  default:
-                        break;
-            }
+            // udpate global parameters using the old and new states
+            knobs[i].update(oldState,newState);
       }
 
       // Check for changes in key presses
@@ -135,38 +119,6 @@ void knobDecode(boardkeys_t newKeys, uint8_t* TX_Message_Ptr) {
             TX_Message_Ptr[2] = ' ';
       }
 
-      // Update related global variables
-      if(knobRotation[3] != 0){ // Update volume
-            int tmpVolume= int(__atomic_load_n(&volume,__ATOMIC_RELAXED)) + knobRotation[3];
-            tmpVolume = std::min(std::max(int(tmpVolume),0),7);
-            __atomic_store_n(&volume,tmpVolume,__ATOMIC_RELAXED);
-      }
-
-      if(knobRotation[2] != 0){ // Update octave and reset notes played
-            int tmpOctave= int(__atomic_load_n(&octave,__ATOMIC_RELAXED)) + knobRotation[2];
-            tmpOctave = std::min(std::max(int(tmpOctave),0),8);
-            __atomic_store_n(&octave,tmpOctave,__ATOMIC_RELAXED);
-
-            //Reset notes played (This is to make sure that no note in the notesPlayed array will never
-            // turn off if we change the octave while a note is being played)
-            for(int i=0; i<9*12; i++){
-                  __atomic_store_n(&playedNotes[i],0,__ATOMIC_RELAXED);
-            }
-
-      }
-
-      if(knobRotation[1] != 0){ // Update sound
-            int tmpSound= int(__atomic_load_n(&sound,__ATOMIC_RELAXED)) + knobRotation[1];
-            tmpSound = std::min(std::max(int(tmpSound),0),9);
-            __atomic_store_n(&sound,tmpSound,__ATOMIC_RELAXED);
-      }
-
-      if(knobRotation[0] != 0){ // Update reverb
-            int tmpReverb = int(__atomic_load_n(&reverb,__ATOMIC_RELAXED)) + knobRotation[0];
-            tmpReverb = std::min(std::max(int(tmpReverb),0),9);
-            __atomic_store_n(&reverb,tmpReverb,__ATOMIC_RELAXED);
-      }
-
       // Copy newKeys into oldKeys
       memcpy(oldKeys,newKeys,sizeof(oldKeys));
 }
@@ -188,7 +140,6 @@ void scanKeysTask(void * params) {
                   delay_microseconds(4);
                   uint8_t keys = readCols();
 
-                  // Roll previous code into a loop
                   for (int j=0; j< 4; j++){
                         uint8_t bitmask = 1 << j;
                         uint8_t bitShiftedResult = (keys & bitmask) >> j;
@@ -230,4 +181,11 @@ void init_keydetect() {
             DEBUG_PRINT("ERROR");
             print(xPortGetFreeHeapSize());
       }
+
+      // init knob array with corresponding parameters
+      knobs[0] = Knob(reverb);
+      knobs[1] = Knob(sound);
+      knobs[2] = Knob(octave);
+      knobs[3] = Knob(volume);
 }
+

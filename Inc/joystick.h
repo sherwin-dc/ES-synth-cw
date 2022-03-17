@@ -6,6 +6,7 @@ extern "C" {
 #endif
 
 uint8_t readJoystick();
+void init_joystick();
 
 #ifdef __cplusplus
 }
