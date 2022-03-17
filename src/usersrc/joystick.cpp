@@ -2,6 +2,7 @@
 #include "lcd.h"
 #include "joystick.h"
 #include "debug.h"
+#include "main.h"
 
 #include <stdio.h>
 
@@ -20,12 +21,15 @@ uint8_t readJoystick() {
     while (1) {
         HAL_ADC_Start(&hadc1);
         HAL_ADC_PollForConversion(&hadc1, joystickMaxDelay);
-        uint32_t rawx = HAL_ADC_GetValue(&hadc1);
-
-        HAL_ADC_PollForConversion(&hadc1, joystickMaxDelay);
         uint32_t rawy = HAL_ADC_GetValue(&hadc1);
 
+        HAL_ADC_PollForConversion(&hadc1, joystickMaxDelay);
+        uint32_t rawx = HAL_ADC_GetValue(&hadc1);
+
         HAL_ADC_Stop(&hadc1);
+
+        // joystick values are absolute (no need to depend on prev values)
+        // __atomic_store_n(&modulation,param,__ATOMIC_RELAXED);
 
         // Toggle MCU LED
         HAL_GPIO_TogglePin(GPIOB, LED_BUILTIN_Pin);

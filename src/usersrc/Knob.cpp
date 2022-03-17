@@ -2,15 +2,15 @@
 #include <algorithm>
 
 Knob::Knob() {
-    target = 0;
+    target = nullptr;
 }
 
 // target refers to the "global" parameter that the knob would be tuning
-Knob::Knob(int8_t target) {
+Knob::Knob(volatile uint8_t* target) {
     target = target;
 }
 
-void Knob::setTarget(uint8_t target) {
+void Knob::setTarget(volatile uint8_t* target) {
     target = target;
     return;
 }
@@ -19,15 +19,15 @@ void Knob::update(uint8_t oldState, uint8_t newState) {
     // change according to state
     int8_t delta = change(oldState, newState);
     // if no change OR knob not map to a target, no need to udpate
-    if (!delta || !target) return;
+    if (!delta || target==nullptr) return;
 
     // update parameters
     int param = int(__atomic_load_n(&target,__ATOMIC_RELAXED)) + delta;
     param = std::min(std::max(param, 0), 7);
-    __atomic_store_n(&target,param,__ATOMIC_RELAXED);
+    __atomic_store_n(target,param,__ATOMIC_RELAXED);
 
     // only for when target==octave (better way to handle this?)
-    if (target != octave) return;
+    if (target != &octave) return;
 
     //Reset notes played (This is to make sure that no note in the notesPlayed array will never
     // turn off if we change the octave while a note is being played)

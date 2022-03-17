@@ -63,6 +63,8 @@ volatile uint8_t octave = 4; // Global variable which stores octave of piano
 volatile uint8_t sound = 0; // Global variable which stores sound type of piano
 volatile uint8_t reverb = 0; // Global variable which stores reverb of piano
 volatile uint8_t screenOffset = 0; // Global variable which stores offset of what's displayed on the screen
+volatile int8_t modulation = 0;
+volatile int8_t pitch = 0;
 
 QueueHandle_t msgInQ;
 uint8_t RX_Message[8] = {0, 0, 0};

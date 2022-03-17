@@ -183,9 +183,9 @@ void init_keydetect() {
       }
 
       // init knob array with corresponding parameters
-      knobs[0] = Knob(reverb);
-      knobs[1] = Knob(sound);
-      knobs[2] = Knob(octave);
-      knobs[3] = Knob(volume);
+      knobs[0] = Knob(&reverb);
+      knobs[1] = Knob(&sound);
+      knobs[2] = Knob(&octave);
+      knobs[3] = Knob(&volume);
 }
 
