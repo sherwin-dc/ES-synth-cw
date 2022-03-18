@@ -131,13 +131,7 @@ void update_lcd(void * params) {
 
   while (1) {
     // START_TIMING
-    
-    // CAN Bus stuff
-    // uint32_t CAN_RX_ID;
-    // Poll for recieved messages
-    // while (CAN_CheckRXLevel()) {
-    //   CAN_RX( &CAN_RX_ID, RX_Message );
-    // }
+    // DEBUG_PRINT("1");
 
     u8g2_ClearBuffer(&u8g2); // Clear content on screen
     u8g2_SetFont(&u8g2, u8g2_font_smallsimple_tr); // Set font size
@@ -186,15 +180,13 @@ void update_lcd(void * params) {
     u8g2_DrawStr(&u8g2, 82, 31 - tmpOffset, "3");
     u8g2_DrawStr(&u8g2, 122, 31 - tmpOffset, "4");
 
-
+    // Print out pitch and modulation (from joystick)
+    char tmp5[9] = "123 123";
+    // TODO : sprintf takes too long. Write own display function instead
+    u8g2_DrawStr(&u8g2, 70, 7, tmp5);
 
     // Print out CAN Rx Buffer
-    u8g2_DrawStr(&u8g2, 70, 7, (char *)RX_Message);
-    // ? Something funky going on with the queue here.
-    // DEBUG_PRINT("!");
-    // print( uxQueueMessagesWaiting( msgInQ ) );
-    // print( uxQueueSpacesAvailable( msgInQ ) );
-
+    // u8g2_DrawStr(&u8g2, 70, 7, (char *)RX_Message);
 
     // Send the buffer to the LCD
     u8g2_SendBuffer(&u8g2);
@@ -202,9 +194,11 @@ void update_lcd(void * params) {
     //DEBUG_PRINT("LCD running")
 
     // Toggle MCU LED
-    HAL_GPIO_TogglePin(GPIOB, LED_BUILTIN_Pin);
+    // HAL_GPIO_TogglePin(GPIOB, LED_BUILTIN_Pin);
 
     // END_TIMING
+    // DEBUG_PRINT("2");
+
 
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }
@@ -233,7 +227,7 @@ void start_lcd_thread() {
 
   DEBUG_PRINT("Initialising Refresh LCD");
   if (xTaskCreate(update_lcd, "Refresh LCD", 128, NULL, 1, NULL) != pdPASS ) {
-    DEBUG_PRINT("Error. Free memory: ");
+    DEBUG_PRINT("ERROR");
     print(xPortGetFreeHeapSize());
   }
 

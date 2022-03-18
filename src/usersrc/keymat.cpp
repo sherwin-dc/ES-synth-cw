@@ -107,7 +107,7 @@ void knobDecode(boardkeys_t newKeys, uint8_t* TX_Message_Ptr) {
                   // Button has been released
                   else if (oldKeyState==0) { TX_Message_Ptr[0] = 'R'; }
 
-                  DEBUG_PRINT("TX CAN MSG");
+                  // DEBUG_PRINT("TX CAN MSG");
                   CAN_TX(0x123, TX_Message_Ptr);      // Transmit message over CAN
             } 
       }
@@ -130,6 +130,7 @@ void scanKeysTask(void * params) {
       uint8_t TX_Message[8] = {0}; // Stores outgoing messages on the CAN Bus
 
       while (1) {
+            // DEBUG_PRINT("1");
 
             // Array of piano keys which are pressed
             boardkeys_t keyPressed;
@@ -171,14 +172,16 @@ void scanKeysTask(void * params) {
             // ~ end debug code
             */
 
+            // DEBUG_PRINT("2");
+
             vTaskDelayUntil( &xLastWakeTime, xFrequency );
       }
 }
 
 void init_keydetect() {
       DEBUG_PRINT("Initialising Detect Keys");
-      if (xTaskCreate(scanKeysTask, "Detect keys", 128, NULL, 2, NULL) != pdPASS) {
-            DEBUG_PRINT("Error. Free memory: ");
+      if (xTaskCreate(scanKeysTask, "Detect keys", 128, NULL, 3, NULL) != pdPASS) {
+            DEBUG_PRINT("ERROR");
             print(xPortGetFreeHeapSize());
       }
 

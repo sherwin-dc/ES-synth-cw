@@ -3,6 +3,7 @@
 #include "joystick.h"
 #include "debug.h"
 #include "main.h"
+#include "delay.h"
 
 #include <stdio.h>
 
@@ -10,23 +11,42 @@
 const uint32_t joystickMaxDelay = HAL_MAX_DELAY;
 
 // TODO: configure 
-const uint32_t x_mid = 2048;
-const uint32_t y_mid = 2048;
+const uint32_t y_mid = 2007;
+const uint32_t x_mid = 1790;
 const uint32_t xy_min = 0;
-const uint32_t xy_max = 4096;
+const uint32_t xy_max = 4030;
 
 
 //JOYSTICK SHOULD BE USED TO MODULATE THE FREQUENCY 
 void readJoystick(void* params) {
-    while (1) {
-        HAL_ADC_Start(&hadc1);
-        HAL_ADC_PollForConversion(&hadc1, joystickMaxDelay);
-        uint32_t rawy = HAL_ADC_GetValue(&hadc1);
+    const TickType_t xFrequency = 100/portTICK_PERIOD_MS;
+    TickType_t xLastWakeTime = xTaskGetTickCount();
 
+    while (1) {
+        DEBUG_PRINT("1");
+        // delay_microseconds(500);
+
+        HAL_ADC_Start(&hadc1);
         HAL_ADC_PollForConversion(&hadc1, joystickMaxDelay);
         uint32_t rawx = HAL_ADC_GetValue(&hadc1);
 
+        // delay_microseconds(5);
+        // for(int i=0; i<100; i++) {
+        //     rawx++;
+        //     rawx--;
+        // };
+        DEBUG_PRINT("2");
+
+        HAL_ADC_PollForConversion(&hadc1, joystickMaxDelay);
+        uint32_t rawy = HAL_ADC_GetValue(&hadc1);
+        
+
         HAL_ADC_Stop(&hadc1);
+
+        print(rawx);
+        print(rawy);
+        // delay_microseconds(500);
+
 
         // normalise the values
         int8_t y = normaliseJoystick(rawy, xy_min, y_mid, xy_max);
@@ -38,12 +58,15 @@ void readJoystick(void* params) {
 
         // Toggle MCU LED
         HAL_GPIO_TogglePin(GPIOB, LED_BUILTIN_Pin);
+        // DEBUG_PRINT("3");
 
-        vTaskDelay( pdMS_TO_TICKS(100) );
+        // vTaskDelay( pdMS_TO_TICKS(100) );
+        vTaskDelayUntil( &xLastWakeTime, xFrequency );
     }
 }
 
 void init_joystick() {
+    DEBUG_PRINT("Initializing Joystick Read");
     if (xTaskCreate(readJoystick, "Read Joystick", 128, NULL, 2, NULL) != pdPASS) {
         DEBUG_PRINT("ERROR");
         print(xPortGetFreeHeapSize());
@@ -52,11 +75,13 @@ void init_joystick() {
 
 // [-128 - 127]
 int8_t normaliseJoystick(uint32_t value, uint32_t min, uint32_t mid, uint32_t max) {
-    if (value < mid) {
-        value = (value - mid)/mid * 128;
-        return (int8_t) value;
-    } else {
-        value = (value - mid)/(max-mid) * 127;
-        return (int8_t) value;
-    }
+    int8_t rtn = 0;
+    // if (value < mid) {
+    //     rtn = ((value - mid) * 128) / mid;
+    //     // return (int8_t) value;
+    // } else {
+    //     rtn =((value - mid) * 127) /(max-mid);
+    //     // return (int8_t) value;
+    // }
+    return rtn;
 }

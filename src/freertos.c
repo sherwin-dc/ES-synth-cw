@@ -106,10 +106,10 @@ void MX_FREERTOS_Init(void) {
   DEBUG_PRINT("LCD Thread Started");
   init_keydetect();
   DEBUG_PRINT("Keypress Detect Thread Started");
-  init_can_rx_decode();
-  DEBUG_PRINT("CAN Rx Buffer Thread Started");
   init_joystick();
-  DEBUG_PRINT("Joystick Detect Thread Started")
+  DEBUG_PRINT("Joystick Detect Thread Started");
+  // init_can_rx_decode();
+  // DEBUG_PRINT("CAN Rx Buffer Thread Started");
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */
