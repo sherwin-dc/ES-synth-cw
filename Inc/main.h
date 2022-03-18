@@ -50,6 +50,8 @@ extern volatile uint8_t octave; // Global variable which stores octave of piano
 extern volatile uint8_t sound; // Global variable which stores sound type of piano
 extern volatile uint8_t reverb; // Global variable which stores reverb of piano
 extern volatile uint8_t screenOffset; // Global variable which stores offset of what's displayed on the screen
+extern volatile int8_t modulation;
+extern volatile int8_t pitch;
 
 // handles incoming messages
 extern QueueHandle_t msgInQ;

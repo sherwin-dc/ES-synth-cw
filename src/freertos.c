@@ -38,6 +38,7 @@
 extern void start_lcd_thread();
 extern void init_can_rx_decode();
 extern void init_keydetect();
+extern void init_joystick();
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -107,6 +108,8 @@ void MX_FREERTOS_Init(void) {
   DEBUG_PRINT("Keypress Detect Thread Started");
   init_can_rx_decode();
   DEBUG_PRINT("CAN Rx Buffer Thread Started");
+  init_joystick();
+  DEBUG_PRINT("Joystick Detect Thread Started")
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */
