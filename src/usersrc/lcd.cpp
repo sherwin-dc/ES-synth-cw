@@ -190,6 +190,10 @@ void update_lcd(void * params) {
 
     // Print out CAN Rx Buffer
     u8g2_DrawStr(&u8g2, 70, 7, (char *)RX_Message);
+    // ? Something funky going on with the queue here.
+    // DEBUG_PRINT("!");
+    // print( uxQueueMessagesWaiting( msgInQ ) );
+    // print( uxQueueSpacesAvailable( msgInQ ) );
 
 
     // Send the buffer to the LCD

@@ -134,7 +134,8 @@ int main(void)
 
   // Initialise CAN message queue
   msgInQ = xQueueCreate(36,8);
-
+  xQueueReset(msgInQ);    // Ensure message queue is empty
+  
   // Initialize CAN bus
   setCANFilter(0x123, 0x7ff, 0);
   CAN_RegisterRX_ISR(CAN_RX_ISR);

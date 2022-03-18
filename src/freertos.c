@@ -102,7 +102,7 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   start_lcd_thread();
-  DEBUG_PRINT("HELLO WORLD2");
+  DEBUG_PRINT("LCD Thread Started");
   init_keydetect();
   DEBUG_PRINT("Keypress Detect Thread Started");
   init_can_rx_decode();
