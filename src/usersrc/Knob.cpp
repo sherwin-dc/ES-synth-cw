@@ -1,4 +1,5 @@
 #include "Knob.hpp"
+#include "main.h"
 #include <algorithm>
 
 Knob::Knob() {
@@ -6,12 +7,12 @@ Knob::Knob() {
 }
 
 // target refers to the "global" parameter that the knob would be tuning
-Knob::Knob(volatile uint8_t* target) {
-    target = target;
+Knob::Knob(volatile uint8_t* _target) {
+    target = _target;
 }
 
-void Knob::setTarget(volatile uint8_t* target) {
-    target = target;
+void Knob::setTarget(volatile uint8_t* _target) {
+    target = _target;
     return;
 }
 
@@ -19,10 +20,12 @@ void Knob::update(uint8_t oldState, uint8_t newState) {
     // change according to state
     int8_t delta = change(oldState, newState);
     // if no change OR knob not map to a target, no need to udpate
-    if (!delta || target==nullptr) return;
+    if (!delta || target==nullptr) {
+        return;
+    }
 
     // update parameters
-    int param = int(__atomic_load_n(&target,__ATOMIC_RELAXED)) + delta;
+    int param = int(__atomic_load_n(target,__ATOMIC_RELAXED)) + delta;
     param = std::min(std::max(param, 0), 7);
     __atomic_store_n(target,param,__ATOMIC_RELAXED);
 
