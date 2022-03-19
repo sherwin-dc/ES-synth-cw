@@ -55,6 +55,8 @@ extern volatile int8_t pitch;
 
 // handles incoming messages
 extern QueueHandle_t msgInQ;
+extern QueueHandle_t msgOutQ;
+extern SemaphoreHandle_t CAN_TX_Semaphore;
 
 // CAN recieve buffer
 extern uint8_t RX_Message[8];
@@ -67,7 +69,6 @@ extern uint8_t RX_Message[8];
 
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
-void vApplicationStackOverflowHook( TaskHandle_t xTask, signed char *pcTaskName );
 /* USER CODE BEGIN EFP */
 
 /* USER CODE END EFP */

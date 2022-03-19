@@ -37,6 +37,7 @@
 /* USER CODE BEGIN PD */
 extern void start_lcd_thread();
 extern void init_can_rx_decode();
+extern void init_can_tx_decode();
 extern void init_keydetect();
 extern void init_joystick();
 extern void init_run_time_stats();
@@ -110,10 +111,11 @@ void MX_FREERTOS_Init(void) {
   init_keydetect();
   DEBUG_PRINT("Keypress Detect Thread Started");
   init_joystick();
-  DEBUG_PRINT("Joystick Detect Thread Started");
-  
-  // init_can_rx_decode();
-  // DEBUG_PRINT("CAN Rx Buffer Thread Started");
+  DEBUG_PRINT("Joystick Detect Thread Started");  
+  init_can_rx_decode();
+  DEBUG_PRINT("CAN Rx Buffer Thread Started");  
+  init_can_tx_decode();
+  DEBUG_PRINT("CAN Tx Buffer Thread Started");
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */

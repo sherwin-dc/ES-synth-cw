@@ -16,7 +16,7 @@ void setOutMuxBit(const uint8_t bitIdx, const int value);
 
 uint8_t readCols();
 void setRow(uint8_t rowIdx);
-void knobDecode(boardkeys_t newKeys, uint8_t* TX_Message_Ptr);
+void knobDecode(boardkeys_t newKeys);
 
 void scanKeysTask(void * params);
 void init_keydetect();

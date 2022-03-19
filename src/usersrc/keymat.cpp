@@ -73,7 +73,9 @@ void setRow(uint8_t rowIdx) {
 // Check whether knobs are being turned
 // ! Also detects whether keys state has been changed
 // can we change the fucntion name?
-void knobDecode(boardkeys_t newKeys, uint8_t* TX_Message_Ptr) {
+void knobDecode(boardkeys_t newKeys) {
+
+      uint8_t TX_Message[8] = {0}; // Stores outgoing messages on the CAN Bus
 
       // Static variable holding the keys from the last time the function was called
       static boardkeys_t oldKeys = {0};
@@ -95,28 +97,27 @@ void knobDecode(boardkeys_t newKeys, uint8_t* TX_Message_Ptr) {
             // button state has changed
             if (oldKeyState ^ newKeyState) {
                   anyKeyPressed = true;
-                  // TODO: Add this to a queue so that multiple simultaneous key presses are also reflected
-                  // TX_Message_Ptr[1] = i;                  
-                  // TX_Message_Ptr[2] = octave;                  
-                  
-                  TX_Message_Ptr[1] = i + 48;
-                  TX_Message_Ptr[2] = octave + 48;
+                  // TX_Message[1] = i;                  
+                  // TX_Message[2] = octave;                  
+                  TX_Message[1] = i + 48;
+                  TX_Message[2] = octave + 48;
 
                   // Button has been pressed
-                  if (oldKeyState==1)      { TX_Message_Ptr[0] = 'P'; }
+                  if (oldKeyState==1)      { TX_Message[0] = 'P'; }
                   // Button has been released
-                  else if (oldKeyState==0) { TX_Message_Ptr[0] = 'R'; }
+                  else if (oldKeyState==0) { TX_Message[0] = 'R'; }
 
                   // DEBUG_PRINT("TX CAN MSG");
-                  CAN_TX(0x123, TX_Message_Ptr);      // Transmit message over CAN
+                  // CAN_TX(0x123, TX_Message);      // Transmit message over CAN
+                  xQueueSend(msgOutQ, TX_Message, portMAX_DELAY);
             } 
       }
       
       // Clear tx buffer
       if (!anyKeyPressed) {
-            TX_Message_Ptr[0] = ' ';
-            TX_Message_Ptr[1] = ' ';
-            TX_Message_Ptr[2] = ' ';
+            TX_Message[0] = ' ';
+            TX_Message[1] = ' ';
+            TX_Message[2] = ' ';
       }
 
       // Copy newKeys into oldKeys
@@ -127,7 +128,6 @@ void knobDecode(boardkeys_t newKeys, uint8_t* TX_Message_Ptr) {
 void scanKeysTask(void * params) {
       const TickType_t xFrequency = 20/portTICK_PERIOD_MS;
       TickType_t xLastWakeTime = xTaskGetTickCount();
-      uint8_t TX_Message[8] = {0}; // Stores outgoing messages on the CAN Bus
 
       while (1) {
             // DEBUG_PRINT("1");
@@ -157,20 +157,7 @@ void scanKeysTask(void * params) {
 
             // Decode whether any of the knobs are being turned
             // ! And if key state has changed since previous iteration
-            knobDecode(keyPressed, TX_Message);
-
-            /*
-            // ~ debug code
-            lcd_t lcd;
-            sprintf(lcd, "%c %u %u", TX_Message[0], TX_Message[1], TX_Message[2]);
-            DEBUG_PRINT("Read Pins");
-
-            u8g2_ClearBuffer(&u8g2);
-            u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);
-            u8g2_DrawStr(&u8g2, 2, 10, lcd);  // write something to the internal memory
-            u8g2_SendBuffer(&u8g2);
-            // ~ end debug code
-            */
+            knobDecode(keyPressed);
 
             // DEBUG_PRINT("2");
 

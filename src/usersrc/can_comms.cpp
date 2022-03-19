@@ -213,6 +213,10 @@ void CAN_RX_ISR() {
     print(queueSendRes==pdTRUE);
 }
 
+void CAN_TX_ISR(){
+  xSemaphoreGiveFromISR(CAN_TX_Semaphore, NULL);
+}
+
 // Create a decode thread to handle incoming CAN messages
 void decodeCANMessages(void *params) {
     // THESE TWO LINES DO NOT NEED TO BE HERE; ADDED BY EDVARD TO STOP TASK FROM TAKING UP CPU TIME
@@ -253,9 +257,26 @@ void decodeCANMessages(void *params) {
     vTaskDelete(NULL);
 }
 
+void transmitCANMessages(void* params){
+  uint8_t msgOut[8];
+  while(1){
+    xQueueReceive(msgOutQ, msgOut, portMAX_DELAY);
+    xSemaphoreTake(CAN_TX_Semaphore, portMAX_DELAY);
+    CAN_TX(0x123, msgOut);
+  }
+}
+
 void init_can_rx_decode(){
     DEBUG_PRINT("Initializing CAN RX Decode");
     if (xTaskCreate(decodeCANMessages, "CAN Decoder", 256, NULL, 3, NULL) != pdPASS) {
+        DEBUG_PRINT("ERROR");
+        print(xPortGetFreeHeapSize());
+    }
+}
+
+void init_can_tx_decode(){
+    DEBUG_PRINT("Initializing CAN TX Decode");
+    if (xTaskCreate(transmitCANMessages, "CAN Transmitter", 128, NULL, 3, NULL) != pdPASS) {
         DEBUG_PRINT("ERROR");
         print(xPortGetFreeHeapSize());
     }

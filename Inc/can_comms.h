@@ -25,6 +25,7 @@ uint32_t CAN_CheckRXLevel();
 uint32_t CAN_RX(uint32_t *ID, uint8_t data[8]);
 
 // // CAN bus interrupts
+void CAN_TX_ISR();
 void CAN_RX_ISR();
 
 // Set up an interrupt on received messages
@@ -33,9 +34,13 @@ uint32_t CAN_RegisterRX_ISR(void(*callback)());
 // Set up an interrupt on transmitted messages
 uint32_t CAN_RegisterTX_ISR(void(*callback)());
 
+// Task for decoding/transmitting messages
 void decodeCANMessages(void* params);
+void transmitCANMessages(void* params);
 
+// Task for sending messages
 void init_can_rx_decode();
+void init_can_tx_decode();
 
 #ifdef __cplusplus
 }

@@ -67,6 +67,9 @@ volatile int8_t modulation = 0;
 volatile int8_t pitch = 0;
 
 QueueHandle_t msgInQ;
+QueueHandle_t msgOutQ;
+SemaphoreHandle_t CAN_TX_Semaphore;
+
 uint8_t RX_Message[8] = {0};
 
 /* USER CODE END PV */
@@ -136,20 +139,31 @@ int main(void)
   DEBUG_PRINT("Hello World!");
   init_sound();
 
-  // Initialise CAN message queue
+  // Initialise CAN message queues
   msgInQ = xQueueCreate(36,8);
   if (msgInQ == NULL){
     DEBUG_PRINT("Error in creating msgInQ");
     while(1);
   } else {
     DEBUG_PRINT("msgInQ created successfuly");
-    xQueueReset(msgInQ);    // Ensure message queue is empty
-    // print(uxQueueSpacesAvailable(msgInQ));
+    xQueueReset(msgInQ);
   }
   
+  msgOutQ = xQueueCreate(36,8);
+ if (msgOutQ == NULL){
+    DEBUG_PRINT("Error in creating msgOutQ");
+    while(1);
+  } else {
+    DEBUG_PRINT("msgOutQ created successfuly");
+    xQueueReset(msgOutQ);
+  }
+  
+  CAN_TX_Semaphore = xSemaphoreCreateCounting(3,3);
+
   // Initialize CAN bus
   setCANFilter(0x123, 0x7ff, 0);
   CAN_RegisterRX_ISR(CAN_RX_ISR);
+  CAN_RegisterTX_ISR(CAN_TX_ISR);
   CAN_Start();
 
   /* USER CODE END 2 */
@@ -255,8 +269,3 @@ void assert_failed(uint8_t *file, uint32_t line)
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
-
-void vApplicationStackOverflowHook( TaskHandle_t xTask, signed char *pcTaskName )
-{
-  DEBUG_PRINT("STACK OVERFLOW");
-}
