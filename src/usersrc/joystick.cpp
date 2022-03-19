@@ -24,7 +24,7 @@ void readJoystick(void* params) {
     TickType_t xLastWakeTime = xTaskGetTickCount();
 
     while (1) {
-        DEBUG_PRINT("1");
+        // DEBUG_PRINT("1");
         // delay_microseconds(500);
 
         // HAL_ADC_Start(&hadc1);
@@ -36,7 +36,7 @@ void readJoystick(void* params) {
         //     rawx++;
         //     rawx--;
         // };
-        DEBUG_PRINT("2");
+        // DEBUG_PRINT("2");
 
         // HAL_ADC_PollForConversion(&hadc1, joystickMaxDelay);
         // uint32_t rawy = HAL_ADC_GetValue(&hadc1);
@@ -46,8 +46,8 @@ void readJoystick(void* params) {
         uint32_t v1, v2;
         v1 = __atomic_load_n(&ADC[0], __ATOMIC_RELAXED);
         v2 = __atomic_load_n(&ADC[1], __ATOMIC_RELAXED);
-        print(v1);
-        print(v2);
+        // print(v1);
+        // print(v2);
         // delay_microseconds(500);
 
 
@@ -68,15 +68,15 @@ void readJoystick(void* params) {
     }
 }
 
-void init_joystick() {
+extern "C" void init_joystick() {
     DEBUG_PRINT("Initializing Joystick Read");
     HAL_ADC_Start_DMA(&hadc1, ADC, 2);
 
 
-    if (xTaskCreate(readJoystick, "Read Joystick", 256, NULL, 2, NULL) != pdPASS) {
-        DEBUG_PRINT("ERROR");
-        print(xPortGetFreeHeapSize());
-    }
+    // if (xTaskCreate(readJoystick, "Read Joystick", 256, NULL, 2, NULL) != pdPASS) {
+    //     DEBUG_PRINT("ERROR");
+    //     print(xPortGetFreeHeapSize());
+    // }
 }
 
 // [-128 - 127]
