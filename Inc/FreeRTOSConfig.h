@@ -168,6 +168,18 @@ standard names. */
 
 /* USER CODE BEGIN Defines */
 /* Section where parameter definitions can be added (for instance, to override default ones in FreeRTOS.h) */
+// Check for FreeRTOS stack overflow (slows down program)
+#define configCHECK_FOR_STACK_OVERFLOW 2
+
+#define configGENERATE_RUN_TIME_STATS 1
+
+void CONFIGURE_TIMER_FOR_RUN_TIME_STATS();
+uint32_t GET_RUN_TIME_COUNTER_VALUE();
+#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS() \
+CONFIGURE_TIMER_FOR_RUN_TIME_STATS();
+#define portGET_RUN_TIME_COUNTER_VALUE() \
+GET_RUN_TIME_COUNTER_VALUE();
+
 /* USER CODE END Defines */
 
 #endif /* FREERTOS_CONFIG_H */

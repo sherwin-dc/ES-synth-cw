@@ -184,10 +184,10 @@ extern "C" void sampleSound(uint8_t region){
 
 extern "C" void init_sound() {
   HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_1, (uint32_t *) steps, 1100, DAC_ALIGN_12B_R);
-  HAL_TIM_Base_Start(&htim2);
+  HAL_TIM_Base_Start(&htim7);
 
   HAL_Delay(500);
-  __HAL_TIM_SET_AUTORELOAD(&htim2, 3273); // Set DMA to work at 22 kHz
+  __HAL_TIM_SET_AUTORELOAD(&htim7, 3273); // Set DMA to work at 22 kHz
 
   //HAL_Delay(500);
   //HAL_DAC_Stop_DMA(&hdac1, DAC_CHANNEL_1);

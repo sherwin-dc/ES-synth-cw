@@ -121,8 +121,10 @@ int main(void)
   MX_DMA_Init();
   MX_TIM6_Init();
   MX_TIM2_Init();
+  MX_TIM7_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start(&htim1); // Start TIM1
+  HAL_TIM_Base_Start(&htim2); // Start TIM2 for FreeRTOS time stats
   HAL_TIM_Base_Start(&htim6); // TIM 6 will be used for time measurement
   // Initialise the DAC for 
   HAL_DAC_Start(&hdac1,DAC_CHANNEL_1);

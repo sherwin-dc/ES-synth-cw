@@ -194,7 +194,7 @@ void update_lcd(void * params) {
     //DEBUG_PRINT("LCD running")
 
     // Toggle MCU LED
-    // HAL_GPIO_TogglePin(GPIOB, LED_BUILTIN_Pin);
+    HAL_GPIO_TogglePin(GPIOB, LED_BUILTIN_Pin);
 
     // END_TIMING
     // DEBUG_PRINT("2");
