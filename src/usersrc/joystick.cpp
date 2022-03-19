@@ -11,10 +11,10 @@
 const uint32_t joystickMaxDelay = HAL_MAX_DELAY;
 
 // TODO: configure 
-const uint32_t y_mid = 2007;
-const uint32_t x_mid = 1790;
-const uint32_t xy_min = 0;
-const uint32_t xy_max = 4030;
+const int32_t y_mid = 2007;
+const int32_t x_mid = 1790;
+const int32_t xy_min = 0;
+const int32_t xy_max = 4030;
 
 
 //JOYSTICK SHOULD BE USED TO MODULATE THE FREQUENCY 
@@ -43,14 +43,29 @@ void readJoystick(void* params) {
 
         HAL_ADC_Stop(&hadc1);
 
-        print(rawx);
-        print(rawy);
         // delay_microseconds(500);
+        // DEBUG_PRINT("delay");
 
 
         // normalise the values
-        int8_t y = normaliseJoystick(rawy, xy_min, y_mid, xy_max);
-        int8_t x = normaliseJoystick(rawx, xy_min, x_mid, xy_max);
+        // int8_t y = normaliseJoystick(rawy, xy_min, y_mid, xy_max);
+        // int8_t x = normaliseJoystick(rawx, xy_min, x_mid, xy_max);
+        int32_t tmp;
+
+        int8_t y;
+        tmp = (rawy - y_mid) * 128;
+        if (rawy > y_mid) {
+            y = (int8_t) (tmp/ y_mid);
+        } else { 
+            // y = (int8_t)(tmp /(xy_max-y_mid));
+            y = (int8_t)(tmp /y_mid);
+            // y = (int8_t)0;
+        }
+
+        int8_t x = (int8_t)rawx;
+
+        print(x);
+        print(y);
 
         // joystick values are absolute (no need to depend on prev values)
         __atomic_store_n(&pitch,y,__ATOMIC_RELAXED);
@@ -75,13 +90,15 @@ void init_joystick() {
 
 // [-128 - 127]
 int8_t normaliseJoystick(uint32_t value, uint32_t min, uint32_t mid, uint32_t max) {
-    int8_t rtn = 0;
+    int32_t rtn = (int32_t)value;
     // if (value < mid) {
-    //     rtn = ((value - mid) * 128) / mid;
+    //     // rtn = ((value - mid) * 128) / mid;
+    //     rtn = 1;
     //     // return (int8_t) value;
     // } else {
-    //     rtn =((value - mid) * 127) /(max-mid);
+    //     // rtn =((value - mid) * 127) /(max-mid);
+    //     rtn = 0;
     //     // return (int8_t) value;
     // }
-    return rtn;
+    return rtn ? (int8_t)0 : (int8_t)1;
 }
