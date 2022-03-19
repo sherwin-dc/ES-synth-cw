@@ -67,7 +67,7 @@ volatile int8_t modulation = 0;
 volatile int8_t pitch = 0;
 
 QueueHandle_t msgInQ;
-uint8_t RX_Message[8] = {0, 0, 0};
+uint8_t RX_Message[8] = {0};
 
 /* USER CODE END PV */
 
@@ -136,7 +136,14 @@ int main(void)
 
   // Initialise CAN message queue
   msgInQ = xQueueCreate(36,8);
-  xQueueReset(msgInQ);    // Ensure message queue is empty
+  if (msgInQ == NULL){
+    DEBUG_PRINT("Error in creating msgInQ");
+    while(1);
+  } else {
+    DEBUG_PRINT("msgInQ created successfuly");
+    xQueueReset(msgInQ);    // Ensure message queue is empty
+    // print(uxQueueSpacesAvailable(msgInQ));
+  }
   
   // Initialize CAN bus
   setCANFilter(0x123, 0x7ff, 0);
@@ -247,3 +254,7 @@ void assert_failed(uint8_t *file, uint32_t line)
 }
 #endif /* USE_FULL_ASSERT */
 
+void vApplicationStackOverflowHook( TaskHandle_t xTask, signed char *pcTaskName )
+{
+  DEBUG_PRINT("STACK OVERFLOW");
+}
