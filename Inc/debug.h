@@ -8,6 +8,7 @@ extern "C" {
 
 #ifdef DEBUG_PRINTS
 
+
 #define DEBUG_PRINT(X)                                                    \
 HAL_UART_Transmit(&hlpuart1, (uint8_t *)__func__ , sizeof(__func__), 100); \
 HAL_UART_Transmit(&hlpuart1, (uint8_t *) X "\n", sizeof(X), 100);     
@@ -33,6 +34,8 @@ print(__HAL_TIM_GET_COUNTER(&htim6)); \
 DEBUG_PRINT("microseconds. End Timing");
 
 void print(uint32_t val);
+
+void blink_LED_error();
 
 #ifdef __cplusplus
 }
