@@ -200,19 +200,24 @@ void HAL_CAN_TxMailbox2CompleteCallback (CAN_HandleTypeDef * hcan){
 void CAN_RX_ISR() {
     uint8_t RX_Message_ISR[8];
     uint32_t ID;
-    DEBUG_PRINT("CAN_RX_ISR");
+    DEBUG_PRINT("CAN_RX");
     uint32_t rx_res = CAN_RX(&ID, RX_Message_ISR);
-    print(rx_res);
+    print(rx_res==0);
+    
+    DEBUG_PRINT("msgInQ waiting | sending:");
+    print( (uint32_t)uxQueueMessagesWaitingFromISR(msgInQ) );
+
     BaseType_t queueSendRes = pdTRUE; // Placeholder
     queueSendRes = xQueueSendFromISR(msgInQ, RX_Message_ISR, NULL);
-    print(queueSendRes);
+    DEBUG_PRINT("xQueueSend");
+    print(queueSendRes==pdTRUE);
 }
 
 // Create a decode thread to handle incoming CAN messages
 void decodeCANMessages(void *params) {
     // THESE TWO LINES DO NOT NEED TO BE HERE; ADDED BY EDVARD TO STOP TASK FROM TAKING UP CPU TIME
-    const TickType_t xFrequency = 100/portTICK_PERIOD_MS;
-    TickType_t xLastWakeTime = xTaskGetTickCount();
+    // const TickType_t xFrequency = 25/portTICK_PERIOD_MS;
+    // TickType_t xLastWakeTime = xTaskGetTickCount();
     
     DEBUG_PRINT("Enter");
     while(1){
@@ -225,10 +230,12 @@ void decodeCANMessages(void *params) {
       // ? Perhaps it needs to be scheduled as well.
       // ? The thing is that xQueueRecieve never returns.
       // ? Fix this later
-      DEBUG_PRINT("1");
-      queueReceiveRes = xQueueReceive(msgInQ, RX_Message, (TickType_t)1);
-      // queueReceiveRes = xQueueReceive(msgInQ, RX_Message, portMAX_DELAY);
-      DEBUG_PRINT("2");
+      DEBUG_PRINT("msgInQ waiting | sending:");
+      print( (uint32_t)uxQueueMessagesWaiting(msgInQ) );
+      print( (uint32_t)uxQueueSpacesAvailable(msgInQ) );
+      // queueReceiveRes = xQueueReceive(msgInQ, (void*)RX_Message, (TickType_t)0);
+      queueReceiveRes = xQueueReceive(msgInQ, (void*)RX_Message, portMAX_DELAY);
+      // DEBUG_PRINT("Send");
       if ( queueReceiveRes == pdPASS ){
         // DEBUG_PRINT("can rx smth");
         print(RX_Message[0]);
@@ -237,19 +244,19 @@ void decodeCANMessages(void *params) {
       } else {
         DEBUG_PRINT("x");
       }
-      DEBUG_PRINT("3");
+      // DEBUG_PRINT("Exit CAN decode");
 
       // THIS LINE DOES NOT NEED TO BE HERE; ADDED BY EDVARD TO STOP TASK FROM TAKING UP CPU TIME
-      vTaskDelayUntil( &xLastWakeTime, xFrequency );
+      // vTaskDelayUntil( &xLastWakeTime, xFrequency );
     }
-    DEBUG_PRINT("decodeCANMessages exited!");
+    // DEBUG_PRINT("decodeCANMessages exited!");
     vTaskDelete(NULL);
 }
 
 void init_can_rx_decode(){
-    //DEBUG_PRINT("Initializing CAN RX Decode");
-    if (xTaskCreate(decodeCANMessages, "CAN RX ISR", 300, NULL, 1, NULL) != pdPASS) {
-        DEBUG_PRINT("Error. Free memory: ");
+    DEBUG_PRINT("Initializing CAN RX Decode");
+    if (xTaskCreate(decodeCANMessages, "CAN Decoder", 256, NULL, 3, NULL) != pdPASS) {
+        DEBUG_PRINT("ERROR");
         print(xPortGetFreeHeapSize());
     }
 }
