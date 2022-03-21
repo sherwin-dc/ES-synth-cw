@@ -133,57 +133,135 @@ void update_lcd(void * params) {
     // START_TIMING
     // DEBUG_PRINT("1");
 
-    u8g2_ClearBuffer(&u8g2); // Clear content on screen
+    // u8g2_ClearBuffer(&u8g2); // Clear content on screen
     u8g2_SetFont(&u8g2, u8g2_font_smallsimple_tr); // Set font size
 
-    // Variable used to position data on screen
-    uint8_t tmpOffset = __atomic_load_n(&screenOffset,__ATOMIC_RELAXED);
+    // bitbanged array for all notes
+    uint8_t pianoKeys[12] = {0};
 
-    char tmp0 [40] = "NOTES: ";
-    for(int i=0; i < 9*12; i++){
-      if(__atomic_load_n(&playedNotes[i],__ATOMIC_RELAXED)){
-        char tmpNote[1024];
-        strcpy(tmpNote, notes[i%12].c_str());
-        strcat(tmp0,tmpNote);
-        tmp0[strlen(tmp0)] = uint8_t(i/12) + 48;
-        tmp0[strlen(tmp0)] = '\0';
-        strcat(tmp0," ");
+    // collate notes
+    for (int i=0; i<8*12; ++i) {
+      if(__atomic_load_n(&playedNotes[i],__ATOMIC_RELAXED)) {
+        pianoKeys[i%12] |= 1 << (i/12);
       }
     }
 
-    u8g2_SetDrawColor(&u8g2, 1);
-    u8g2_DrawStr(&u8g2, 2, 7 - tmpOffset, tmp0);  // write string to display
+    auto printKeyPress = [&](uint8_t note, uint8_t octave) {
+      bool drawCol = false;
+      if (octave) drawCol = true;
 
-    // Write out the volume
-    char tmp1 [30] = "1. VOLUME: ";
-    tmp1[11] = __atomic_load_n(&volume,__ATOMIC_RELAXED) + 48;
-    u8g2_DrawStr(&u8g2, 2, 15 - tmpOffset, tmp1);  // write string to display
+      switch (note)
+      {
+      case 0:
+        u8g2_SetDrawColor(&u8g2, drawCol);
+        DRAW_WHITE_PRESS(0, "C");
+        break;
+      case 1:
+        u8g2_SetDrawColor(&u8g2, !drawCol);
+        DRAW_BLACK_PRESS(0, "C");
+        break;
+      case 2:
+        u8g2_SetDrawColor(&u8g2, drawCol);
+        DRAW_WHITE_PRESS(1, "D");
+        break;
+      case 3:
+        u8g2_SetDrawColor(&u8g2, !drawCol);
+        DRAW_BLACK_PRESS(1, "D");
+        break;
+      case 4:
+        u8g2_SetDrawColor(&u8g2, drawCol);
+        DRAW_WHITE_PRESS(2, "E");
+        break;
+      case 5:
+        u8g2_SetDrawColor(&u8g2, drawCol);
+        DRAW_WHITE_PRESS(3, "F");
+        break;
+      case 6:
+        u8g2_SetDrawColor(&u8g2, !drawCol);
+        DRAW_BLACK_PRESS(3, "F");
+        break;
+      case 7:
+        u8g2_SetDrawColor(&u8g2, drawCol);
+        DRAW_WHITE_PRESS(4, "G");
+        break;
+      case 8:
+        u8g2_SetDrawColor(&u8g2, !drawCol);
+        DRAW_BLACK_PRESS(4, "G");
+        break;
+      case 9:
+        u8g2_SetDrawColor(&u8g2, drawCol);
+        DRAW_WHITE_PRESS(5, "A");
+        break;
+      case 10:
+        u8g2_SetDrawColor(&u8g2, !drawCol);
+        DRAW_BLACK_PRESS(5, "A");
+        break;
+      case 11:
+        u8g2_SetDrawColor(&u8g2, drawCol);
+        DRAW_WHITE_PRESS(6, "B");
+        break;
+      
+      default:
+        break;
+      }
+    };
 
-    // Write out the octave
-    char tmp2 [30] = "2. OCTAVE: ";
-    tmp2[11] = __atomic_load_n(&octave,__ATOMIC_RELAXED) + 48;
-    u8g2_DrawStr(&u8g2, 75, 15 - tmpOffset, tmp2);  // write string to display
+    // print key presses
+    u8g2_SetFont(&u8g2, u8g2_font_u8glib_4_tf); // Set font size
+    u8g2_SetFontMode(&u8g2, 1);
+    for (int i=0; i<12; ++i) {
+        printKeyPress(i, pianoKeys[i]);
+    }
 
-    // Write out the sound
-    char tmp3 [30] = "3. SOUND: ";
-    strcat(tmp3,sounds[__atomic_load_n(&sound,__ATOMIC_RELAXED)].c_str());
-    u8g2_DrawStr(&u8g2, 2, 23 - tmpOffset, tmp3);  // write string to display
+    // Variable used to position data on screen
 
-    // Write out the reverb
-    char tmp4 [30] = "4. REVERB: ";
-    tmp4[11] = __atomic_load_n(&reverb,__ATOMIC_RELAXED) + 48;
-    u8g2_DrawStr(&u8g2, 75, 23 - tmpOffset, tmp4);  // write string to display
+    // char tmp0 [40] = "NOTES: ";
+    // for(int i=0; i < 9*12; i++){
+    //   if(__atomic_load_n(&playedNotes[i],__ATOMIC_RELAXED)){
+    //     char tmpNote[1024];
+    //     strcpy(tmpNote, notes[i%12].c_str());
+    //     strcat(tmp0,tmpNote);
+    //     tmp0[strlen(tmp0)] = uint8_t(i/12) + 48;
+    //     tmp0[strlen(tmp0)] = '\0';
+    //     strcat(tmp0," ");
+    //   }
+    // }
 
-    // Draw out menu screen on bottom
-    u8g2_DrawStr(&u8g2, 2, 31 - tmpOffset, "1");
-    u8g2_DrawStr(&u8g2, 42, 31 - tmpOffset, "2");
-    u8g2_DrawStr(&u8g2, 82, 31 - tmpOffset, "3");
-    u8g2_DrawStr(&u8g2, 122, 31 - tmpOffset, "4");
 
-    // Print out pitch and modulation (from joystick)
-    char tmp5[9] = "123 123";
-    // TODO : sprintf takes too long. Write own display function instead
-    u8g2_DrawStr(&u8g2, 70, 7, tmp5);
+
+    // u8g2_SetDrawColor(&u8g2, 1);
+    // u8g2_DrawStr(&u8g2, 2, 7 - tmpOffset, tmp0);  // write string to display
+
+    // // Write out the volume
+    // char tmp1 [30] = "1. VOLUME: ";
+    // tmp1[11] = __atomic_load_n(&volume,__ATOMIC_RELAXED) + 48;
+    // u8g2_DrawStr(&u8g2, 2, 15 - tmpOffset, tmp1);  // write string to display
+
+    // // Write out the octave
+    // char tmp2 [30] = "2. OCTAVE: ";
+    // tmp2[11] = __atomic_load_n(&octave,__ATOMIC_RELAXED) + 48;
+    // u8g2_DrawStr(&u8g2, 75, 15 - tmpOffset, tmp2);  // write string to display
+
+    // // Write out the sound
+    // char tmp3 [30] = "3. SOUND: ";
+    // strcat(tmp3,sounds[__atomic_load_n(&sound,__ATOMIC_RELAXED)].c_str());
+    // u8g2_DrawStr(&u8g2, 2, 23 - tmpOffset, tmp3);  // write string to display
+
+    // // Write out the reverb
+    // char tmp4 [30] = "4. REVERB: ";
+    // tmp4[11] = __atomic_load_n(&reverb,__ATOMIC_RELAXED) + 48;
+    // u8g2_DrawStr(&u8g2, 75, 23 - tmpOffset, tmp4);  // write string to display
+
+    // // Draw out menu screen on bottom
+    // u8g2_DrawStr(&u8g2, 2, 31 - tmpOffset, "1");
+    // u8g2_DrawStr(&u8g2, 42, 31 - tmpOffset, "2");
+    // u8g2_DrawStr(&u8g2, 82, 31 - tmpOffset, "3");
+    // u8g2_DrawStr(&u8g2, 122, 31 - tmpOffset, "4");
+
+    // // Print out pitch and modulation (from joystick)
+    // char tmp5[9] = "123 123";
+    // // TODO : sprintf takes too long. Write own display function instead
+    // u8g2_DrawStr(&u8g2, 70, 7, tmp5);
 
     // Print out CAN Rx Buffer
     // u8g2_DrawStr(&u8g2, 70, 7, (char *)RX_Message);
@@ -191,13 +269,9 @@ void update_lcd(void * params) {
     // Send the buffer to the LCD
     u8g2_SendBuffer(&u8g2);
 
-    //DEBUG_PRINT("LCD running")
 
     // Toggle MCU LED
     HAL_GPIO_TogglePin(GPIOB, LED_BUILTIN_Pin);
-
-    // END_TIMING
-    // DEBUG_PRINT("2");
 
 
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
@@ -219,6 +293,25 @@ void init_lcd() {
   u8g2_InitDisplay(&u8g2); // send init sequence to the display, display is in sleep mode after this,
   u8g2_SetPowerSave(&u8g2, 0); // wake up display*/
 
+  u8g2_ClearBuffer(&u8g2);
+  u8g2_SetDrawColor(&u8g2, 2);
+  // draw white keys
+  DRAW_WHITE_KEY(0);
+  DRAW_WHITE_KEY(1);
+  DRAW_WHITE_KEY(2);
+  DRAW_WHITE_KEY(3);
+  DRAW_WHITE_KEY(4);
+  DRAW_WHITE_KEY(5);
+  DRAW_WHITE_KEY(6);
+
+  // draw black keys
+  DRAW_BLACK_KEY(0);
+  DRAW_BLACK_KEY(1);
+  DRAW_BLACK_KEY(3);
+  DRAW_BLACK_KEY(4);
+  DRAW_BLACK_KEY(5);
+
+
 }
 
 
@@ -226,7 +319,7 @@ void init_lcd() {
 void start_lcd_thread() {
 
   DEBUG_PRINT("Initialising Refresh LCD");
-  if (xTaskCreate(update_lcd, "Refresh LCD", 128, NULL, 1, NULL) != pdPASS ) {
+  if (xTaskCreate(update_lcd, "Refresh LCD", 512, NULL, 1, NULL) != pdPASS ) {
     DEBUG_PRINT("ERROR");
     print(xPortGetFreeHeapSize());
   }
