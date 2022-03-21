@@ -276,7 +276,7 @@ void init_can_rx_decode(){
 
 void init_can_tx_decode(){
     DEBUG_PRINT("Initializing CAN TX Decode");
-    if (xTaskCreate(transmitCANMessages, "CAN Transmitter", 128, NULL, 3, NULL) != pdPASS) {
+    if (xTaskCreate(transmitCANMessages, "CAN Transmitter", 256, NULL, 3, NULL) != pdPASS) {
         DEBUG_PRINT("ERROR");
         print(xPortGetFreeHeapSize());
     }

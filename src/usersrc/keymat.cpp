@@ -109,7 +109,9 @@ void knobDecode(boardkeys_t newKeys) {
 
                   // DEBUG_PRINT("TX CAN MSG");
                   // CAN_TX(0x123, TX_Message);      // Transmit message over CAN
-                  xQueueSend(msgOutQ, TX_Message, portMAX_DELAY);
+                  //! This queue seems to block indefinitely sometimes
+                  //! because transmitCANMessages does not seem to be running
+                  // xQueueSend(msgOutQ, TX_Message, portMAX_DELAY);
             } 
       }
       
@@ -167,7 +169,7 @@ void scanKeysTask(void * params) {
 
 void init_keydetect() {
       DEBUG_PRINT("Initialising Detect Keys");
-      if (xTaskCreate(scanKeysTask, "Detect keys", 128, NULL, 3, NULL) != pdPASS) {
+      if (xTaskCreate(scanKeysTask, "Detect keys", 512, NULL, 7, NULL) != pdPASS) {
             DEBUG_PRINT("ERROR");
             print(xPortGetFreeHeapSize());
       }
