@@ -57,6 +57,8 @@ void DMA1_Channel3_IRQHandler(void);
 void CAN1_TX_IRQHandler(void);
 void CAN1_RX0_IRQHandler(void);
 void DMA2_Channel3_IRQHandler(void);
+void DMA2_Channel6_IRQHandler(void);
+void LPUART1_IRQHandler(void);
 /* USER CODE BEGIN EFP */
 
 /* USER CODE END EFP */

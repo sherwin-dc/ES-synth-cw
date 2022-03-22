@@ -54,6 +54,7 @@ typedef struct {
   uint32_t modulation;
 } ADC;
 extern ADC joystick;
+extern volatile uint8_t isRecording;
 
 // handles incoming messages
 extern QueueHandle_t msgInQ;

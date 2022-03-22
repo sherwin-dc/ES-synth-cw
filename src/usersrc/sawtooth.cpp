@@ -67,6 +67,7 @@ int32_t stepsNOFF [1100] = {0}; // Array with same data as steps but centred aro
 int32_t reverbArray [3300] = {0}; // Array which holds the data which the reverb function uses
 uint8_t reverbIndex = 0; // Keeps track of where in the array we should write data next
 
+uint32_t wasRecording = 0; // Keep track of whether a recording as going on
 
 
 // Overwrite section of array read by DMA, region determines which section (either 0 or 1) 
@@ -74,6 +75,7 @@ extern "C" void sampleSound(uint8_t region){
 
   uint32_t tmpSteps [550] = {0}; // Array to temporarily hold the values which we write to steps
   int32_t tmpStepsNOFF [550] = {0}; // Array to temporarily hold the same data as steps but centred around 0
+  uint8_t recordingSteps[550] = {0};
 
   // Read in the volume
   uint8_t tmpVolume = __atomic_load_n(&volume,__ATOMIC_RELAXED);
@@ -173,11 +175,39 @@ extern "C" void sampleSound(uint8_t region){
   // Offset tmpStepsNOFF to create tmpSteps
   for(int i = 0; i <550; i++){
     tmpSteps[i] = uint32_t(tmpStepsNOFF[i] + 2048);
+    recordingSteps[i] = tmpStepsNOFF[i] + 128;
   }
 
   // Copy array to memory used by DMA 
   std::copy(tmpSteps, tmpSteps + 550, steps + region*550);
 
+  // uint8_t * tmpSteps_p = reinterpret_cast<uint8_t*>(&tmpSteps[0]);
+  
+
+  if(__atomic_load_n(&isRecording, __ATOMIC_RELAXED)) {
+
+    // HAL_UART_DMAStop(&hlpuart1);
+    if (wasRecording) {
+      ++wasRecording;
+      HAL_UART_Transmit_DMA(&hlpuart1, recordingSteps, 550);
+    } else {
+      wasRecording = 1;
+      HAL_UART_Transmit(&hlpuart1, (uint8_t*) "RECSTART", 8, 100);
+      HAL_UART_Transmit_DMA(&hlpuart1, recordingSteps, 550);
+    }
+  }
+
+}
+
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
+  HAL_UART_DMAStop(&hlpuart1);
+  if(!__atomic_load_n(&isRecording, __ATOMIC_RELAXED)) {
+    if (wasRecording) {
+      HAL_UART_Transmit(&hlpuart1, reinterpret_cast<uint8_t*>(&wasRecording), 4, 100);
+      HAL_UART_Transmit(&hlpuart1, (uint8_t*) "RECEND", 6, 100);
+      wasRecording = 0; 
+    }
+  }
 }
 
 

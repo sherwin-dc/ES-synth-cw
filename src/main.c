@@ -63,6 +63,7 @@ volatile uint8_t octave = 4; // Global variable which stores octave of piano
 volatile uint8_t sound = 0; // Global variable which stores sound type of piano
 ADC joystick;
 volatile uint8_t reverb = 0;
+volatile uint8_t isRecording = 0;
 
 QueueHandle_t msgInQ;
 QueueHandle_t msgOutQ;

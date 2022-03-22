@@ -157,6 +157,16 @@ void scanKeysTask(void * params) {
                   __atomic_store_n(&playedNotes[12*tmpOctave + i],!keyPressed[i],__ATOMIC_RELAXED);
             }
 
+            // update recording state
+            if (!keyPressed[24]) {
+              __atomic_store_n(&isRecording, 1, __ATOMIC_RELAXED);
+            }
+            
+            if (!keyPressed[25]) {
+              __atomic_store_n(&isRecording, 0, __ATOMIC_RELAXED);
+            }
+            
+
             // Decode whether any of the knobs are being turned
             // ! And if key state has changed since previous iteration
             knobDecode(keyPressed);
