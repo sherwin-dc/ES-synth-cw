@@ -158,11 +158,11 @@ void scanKeysTask(void * params) {
             }
 
             // update recording state
-            if (!keyPressed[24]) {
+            if (!keyPressed[20]) {
               __atomic_store_n(&isRecording, 1, __ATOMIC_RELAXED);
             }
             
-            if (!keyPressed[25]) {
+            if (!keyPressed[21]) {
               __atomic_store_n(&isRecording, 0, __ATOMIC_RELAXED);
             }
             

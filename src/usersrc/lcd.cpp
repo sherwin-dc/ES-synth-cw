@@ -128,7 +128,7 @@ void update_lcd(void * params) {
   // maybe this can be global somewhere?
   std::vector<std::string> notes = {"C","C#","D","D#","E","F","F#","G","G#","A","A#","B"};
   std::vector<std::string> sounds = {"SAW   ","POLY  ","CHORUS","LASER ","SINE  ","5     ","6     ","7     ","8     ","9     "};
-
+  uint8_t recordingBlinking = 0;
   while (1) {
     // START_TIMING
     // DEBUG_PRINT("1");
@@ -238,14 +238,36 @@ void update_lcd(void * params) {
 
     // Print out pitch and modulation (from joystick)
     uint32_t pitch = __atomic_load_n(&joystick.pitch ,__ATOMIC_RELAXED);
-    u8g2_DrawStr(&u8g2, 88, 7, u8x8_u16toa(pitch, 4));
+    u8g2_DrawStr(&u8g2, 86, 7, u8x8_u16toa(pitch/100, 2));
     
-
     uint32_t modulation = __atomic_load_n(&joystick.modulation,__ATOMIC_RELAXED);
-    u8g2_DrawStr(&u8g2, 88, 17, u8x8_u16toa(modulation, 4));
-    // char tmp5[9] = "123 123";
-    // // TODO : sprintf takes too long. Write own display function instead
-    // u8g2_DrawStr(&u8g2, 70, 7, tmp5);
+    u8g2_DrawStr(&u8g2, 116, 7, u8x8_u16toa(modulation/100, 2));
+
+    // Draw out recording
+    u8g2_SetFontMode(&u8g2, 1);
+    unsigned char recordIcon[] = {0xff,0x81,0x99,0xbd,0xbd,0x99,0x81,0xff};
+
+    if(__atomic_load_n(&isRecording, __ATOMIC_RELAXED)) {
+      ++recordingBlinking;
+      if (recordingBlinking==5) {
+        unsigned char currentlyRecordingIcon[] = {0xff,0x81,0x81,0x81,0x81,0x81,0x81,0xff};
+        u8g2_DrawXBM(&u8g2, 78, 12, 8, 8, currentlyRecordingIcon);
+      } else if (recordingBlinking==10) {
+        recordingBlinking = 0;
+        u8g2_DrawXBM(&u8g2, 78, 12, 8, 8, recordIcon);
+      }
+      
+      unsigned char stopRecordingIcon[] = {0xff,0x81,0xbd,0xbd,0xbd,0xbd,0x81,0xff};
+      u8g2_DrawXBM(&u8g2, 116, 12, 8, 8, stopRecordingIcon);
+      
+    } else {
+      u8g2_SetDrawColor(&u8g2, 0);
+      u8g2_DrawBox(&u8g2, 116, 12, 8, 8);
+      u8g2_SetDrawColor(&u8g2, 1);
+      
+      u8g2_DrawXBM(&u8g2, 78, 12, 8, 8, recordIcon);
+    }
+    
 
     // Print out CAN Rx Buffer
     // u8g2_DrawStr(&u8g2, 70, 7, (char *)RX_Message);
@@ -311,10 +333,12 @@ void init_lcd() {
   u8g2_DrawXBM(&u8g2, 112, 26, 6, 6, reverbIcon);
 
   unsigned char pitchIcon[] = {0xd5,0xe5,0xe7,0xe2,0xe2,0xd2};
-  u8g2_DrawXBM(&u8g2, 80, 1, 6, 6, pitchIcon);
+  u8g2_DrawXBM(&u8g2, 78, 1, 6, 6, pitchIcon);
 
   unsigned char modulationIcon[] = {0xca,0xeb,0xff,0xff,0xeb,0xca};
-  u8g2_DrawXBM(&u8g2, 80, 11, 6, 6, modulationIcon);
+  u8g2_DrawXBM(&u8g2, 106, 1, 6, 6, modulationIcon);
+
+
 }
 
 
