@@ -4,6 +4,7 @@
 #include "tim.h"
 #include "dma.h"
 #include "main.h"
+#include "delay.h"
 
 #include <algorithm> // std::copy
 
@@ -189,22 +190,28 @@ extern "C" void sampleSound(uint8_t region){
     // HAL_UART_DMAStop(&hlpuart1);
     if (wasRecording) {
       ++wasRecording;
-      HAL_UART_Transmit_DMA(&hlpuart1, recordingSteps, 550);
+      HAL_UART_Transmit_DMA(&huart2, recordingSteps, 550);
     } else {
       wasRecording = 1;
-      HAL_UART_Transmit(&hlpuart1, (uint8_t*) "RECSTART", 8, 100);
-      HAL_UART_Transmit_DMA(&hlpuart1, recordingSteps, 550);
+      HAL_UART_Transmit(&huart2, (uint8_t*) "RECSTART", 8, 100);
+      HAL_UART_Transmit_DMA(&huart2, recordingSteps, 550);
+    }
+  } else {
+    if (wasRecording) {
+      HAL_UART_Transmit(&huart2, reinterpret_cast<uint8_t*>(&wasRecording), 4, 100);
+      HAL_UART_Transmit(&huart2, (uint8_t*) "RECEND", 6, 100);
+      wasRecording = 0; 
     }
   }
 
 }
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
-  HAL_UART_DMAStop(&hlpuart1);
+  HAL_UART_DMAStop(&huart2);
   if(!__atomic_load_n(&isRecording, __ATOMIC_RELAXED)) {
     if (wasRecording) {
-      HAL_UART_Transmit(&hlpuart1, reinterpret_cast<uint8_t*>(&wasRecording), 4, 100);
-      HAL_UART_Transmit(&hlpuart1, (uint8_t*) "RECEND", 6, 100);
+      HAL_UART_Transmit(&huart2, reinterpret_cast<uint8_t*>(&wasRecording), 4, 100);
+      HAL_UART_Transmit(&huart2, (uint8_t*) "RECEND", 6, 100);
       wasRecording = 0; 
     }
   }

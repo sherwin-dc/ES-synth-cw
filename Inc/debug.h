@@ -10,13 +10,14 @@ extern "C" {
 
 
 #define DEBUG_PRINT(X)                                                    \
-HAL_UART_Transmit(&hlpuart1, (uint8_t *)__func__ , sizeof(__func__), 100); \
-HAL_UART_Transmit(&hlpuart1, (uint8_t *) X "\n", sizeof(X), 100);     
+HAL_UART_Transmit(&huart2, (uint8_t *)__func__ , sizeof(__func__), 100); \
+HAL_UART_Transmit(&huart2, (uint8_t *) X "\n", sizeof(X), 100);     
+
 
 
 #define DEBUG_PRINT_INT(X)                                                 \
-HAL_UART_Transmit(&hlpuart1, (uint8_t *)__func__ , sizeof(__func__), 100); \
-HAL_UART_Transmit(&hlpuart1, (uint8_t *) (itoa(X) + "\n"), sizeof(X), 100);    
+HAL_UART_Transmit(&huart2, (uint8_t *)__func__ , sizeof(__func__), 100); \
+HAL_UART_Transmit(&huart2, (uint8_t *) (itoa(X) + "\n"), sizeof(X), 100);    
 
 #else
 

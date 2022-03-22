@@ -1,17 +1,19 @@
-from ctypes import sizeof
 import serial
 from serial import SerialException
 import wave
 
 try:
-  ser = serial.Serial('COM5', 115200)
+  ser = serial.Serial('COM5', 460800)
   ser.read_until(expected=b"RECSTART")
   print("Recording Start")
   recording = ser.read_until(expected=b"RECEND")
   print("Recording End")
   ExpectedSamples =int.from_bytes(recording[-10:-6],'little')
-
+  
   recording = recording[0:-10]
+  print(ExpectedSamples)
+  print(len(recording)/550)
+
   correctedSampleRate = 22000 / ( ExpectedSamples / ( len(recording) / 550 ))
 
 

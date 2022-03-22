@@ -4,12 +4,12 @@
 
 extern "C" void print(uint32_t val) {
   std::string str = std::to_string(val) + "\n";
-  HAL_UART_Transmit(&hlpuart1, (uint8_t *) str.c_str(), str.size(), 100); 
+  HAL_UART_Transmit(&huart2, (uint8_t *) str.c_str(), str.size(), 100); 
 }  
 
 void print(std::string str) {
   str += "\n";
-  HAL_UART_Transmit(&hlpuart1, (uint8_t *) str.c_str(), str.size(), 100); 
+  HAL_UART_Transmit(&huart2, (uint8_t *) str.c_str(), str.size(), 100); 
 }  
 
 // REMEMBER to Comment out #define configCHECK_FOR_STACK_OVERFLOW 2
@@ -17,7 +17,7 @@ void print(std::string str) {
 extern "C" void vApplicationStackOverflowHook( TaskHandle_t *pxTask, 
  signed char *pcTaskName ) {
      DEBUG_PRINT("STACK OVERFLOW in");
-     HAL_UART_Transmit(&hlpuart1, (uint8_t*)pcTaskName, 16, 100);
+     HAL_UART_Transmit(&huart2, (uint8_t*)pcTaskName, 16, 100);
      while (1) {}
  }
 
@@ -55,7 +55,7 @@ void getRunTimeStats(void* params) {
               configSTACK_DEPTH_TYPE usStackHighWaterMark = pxTaskStatusArray[x].usStackHighWaterMark;	/* The minimum amount of stack space that has remained for the task since the task was created.  The closer this value is to zero the closer the task has come to overflowing its stack. */
 
 
-              HAL_UART_Transmit(&hlpuart1, (uint8_t *) pcTaskName, 16, 100);
+              HAL_UART_Transmit(&huart2, (uint8_t *) pcTaskName, 16, 100);
               print(ulRunTimeCounter);
               print(usStackHighWaterMark);
           }

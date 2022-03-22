@@ -24,8 +24,8 @@
 #include "dac.h"
 #include "dma.h"
 #include "i2c.h"
-#include "usart.h"
 #include "tim.h"
+#include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -118,12 +118,12 @@ int main(void)
   MX_DAC1_Init();
   MX_ADC1_Init();
   MX_I2C1_Init();
-  MX_LPUART1_UART_Init();
   MX_TIM1_Init();
   MX_DMA_Init();
   MX_TIM6_Init();
   MX_TIM2_Init();
   MX_TIM7_Init();
+  MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start(&htim1); // Start TIM1
   HAL_TIM_Base_Start(&htim2); // Start TIM2 for FreeRTOS time stats
