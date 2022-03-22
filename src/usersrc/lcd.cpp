@@ -127,7 +127,7 @@ void update_lcd(void * params) {
 
   // maybe this can be global somewhere?
   std::vector<std::string> notes = {"C","C#","D","D#","E","F","F#","G","G#","A","A#","B"};
-  std::vector<std::string> sounds = {"SAW","POLY","CHORUS","LASER","SINE","5","6","7","8","9"};
+  std::vector<std::string> sounds = {"SAW   ","POLY  ","CHORUS","LASER ","SINE  ","5     ","6     ","7     ","8     ","9     "};
 
   while (1) {
     // START_TIMING
@@ -137,16 +137,16 @@ void update_lcd(void * params) {
     u8g2_SetFont(&u8g2, u8g2_font_smallsimple_tr); // Set font size
 
     // bitbanged array for all notes
-    uint8_t pianoKeys[12] = {0};
+    uint16_t pianoKeys[12] = {0};
 
     // collate notes
-    for (int i=0; i<8*12; ++i) {
+    for (int i=0; i<9*12; ++i) {
       if(__atomic_load_n(&playedNotes[i],__ATOMIC_RELAXED)) {
         pianoKeys[i%12] |= 1 << (i/12);
       }
     }
 
-    auto printKeyPress = [&](uint8_t note, uint8_t octave) {
+    auto printKeyPress = [&](uint8_t note, uint16_t octave) {
       bool drawCol = false;
       if (octave) drawCol = true;
 
@@ -213,52 +213,36 @@ void update_lcd(void * params) {
         printKeyPress(i, pianoKeys[i]);
     }
 
-    // Variable used to position data on screen
+    u8g2_SetFontMode(&u8g2, 0);
+    u8g2_SetDrawColor(&u8g2, 1);
+    u8g2_SetFont(&u8g2, u8g2_font_5x7_mf);
 
-    // char tmp0 [40] = "NOTES: ";
-    // for(int i=0; i < 9*12; i++){
-    //   if(__atomic_load_n(&playedNotes[i],__ATOMIC_RELAXED)){
-    //     char tmpNote[1024];
-    //     strcpy(tmpNote, notes[i%12].c_str());
-    //     strcat(tmp0,tmpNote);
-    //     tmp0[strlen(tmp0)] = uint8_t(i/12) + 48;
-    //     tmp0[strlen(tmp0)] = '\0';
-    //     strcat(tmp0," ");
-    //   }
-    // }
+    // Write out the volume
+    char vol [2] = {0};
+    vol[0] = __atomic_load_n(&volume,__ATOMIC_RELAXED) + 48;
+    u8g2_DrawStr(&u8g2, 10, 32, vol);
+
+    // Write out the octave
+    char oct [2] = {0};
+    oct[0] = __atomic_load_n(&octave,__ATOMIC_RELAXED) + 48;
+    u8g2_DrawStr(&u8g2, 50, 32, oct);
+
+    // Write out the waveform
+    u8g2_DrawStr(&u8g2, 80, 32, sounds[__atomic_load_n(&sound,__ATOMIC_RELAXED)].c_str());
+
+    // Write out the reverb
+    char rev [2] = {0};
+    rev[0] = __atomic_load_n(&reverb,__ATOMIC_RELAXED) + 48;
+    u8g2_DrawStr(&u8g2, 120, 32, rev);
 
 
+    // Print out pitch and modulation (from joystick)
+    uint32_t pitch = __atomic_load_n(&joystick.pitch ,__ATOMIC_RELAXED);
+    u8g2_DrawStr(&u8g2, 88, 7, u8x8_u16toa(pitch, 4));
+    
 
-    // u8g2_SetDrawColor(&u8g2, 1);
-    // u8g2_DrawStr(&u8g2, 2, 7 - tmpOffset, tmp0);  // write string to display
-
-    // // Write out the volume
-    // char tmp1 [30] = "1. VOLUME: ";
-    // tmp1[11] = __atomic_load_n(&volume,__ATOMIC_RELAXED) + 48;
-    // u8g2_DrawStr(&u8g2, 2, 15 - tmpOffset, tmp1);  // write string to display
-
-    // // Write out the octave
-    // char tmp2 [30] = "2. OCTAVE: ";
-    // tmp2[11] = __atomic_load_n(&octave,__ATOMIC_RELAXED) + 48;
-    // u8g2_DrawStr(&u8g2, 75, 15 - tmpOffset, tmp2);  // write string to display
-
-    // // Write out the sound
-    // char tmp3 [30] = "3. SOUND: ";
-    // strcat(tmp3,sounds[__atomic_load_n(&sound,__ATOMIC_RELAXED)].c_str());
-    // u8g2_DrawStr(&u8g2, 2, 23 - tmpOffset, tmp3);  // write string to display
-
-    // // Write out the reverb
-    // char tmp4 [30] = "4. REVERB: ";
-    // tmp4[11] = __atomic_load_n(&reverb,__ATOMIC_RELAXED) + 48;
-    // u8g2_DrawStr(&u8g2, 75, 23 - tmpOffset, tmp4);  // write string to display
-
-    // // Draw out menu screen on bottom
-    // u8g2_DrawStr(&u8g2, 2, 31 - tmpOffset, "1");
-    // u8g2_DrawStr(&u8g2, 42, 31 - tmpOffset, "2");
-    // u8g2_DrawStr(&u8g2, 82, 31 - tmpOffset, "3");
-    // u8g2_DrawStr(&u8g2, 122, 31 - tmpOffset, "4");
-
-    // // Print out pitch and modulation (from joystick)
+    uint32_t modulation = __atomic_load_n(&joystick.modulation,__ATOMIC_RELAXED);
+    u8g2_DrawStr(&u8g2, 88, 17, u8x8_u16toa(modulation, 4));
     // char tmp5[9] = "123 123";
     // // TODO : sprintf takes too long. Write own display function instead
     // u8g2_DrawStr(&u8g2, 70, 7, tmp5);
@@ -312,6 +296,25 @@ void init_lcd() {
   DRAW_BLACK_KEY(5);
 
 
+  u8g2_SetDrawColor(&u8g2, 1);
+  u8g2_SetFont(&u8g2, u8g2_font_smallsimple_tr); // Set font size
+  unsigned char volumeIcon[] = {0xd4,0xe6,0xef,0xef,0xe6,0xd4};
+  u8g2_DrawXBM(&u8g2, 2, 26, 6, 6, volumeIcon);
+
+  unsigned char musicNoteIcon[] = {0xfc,0xe6,0xe2,0xe2,0xf3,0xf3};
+  u8g2_DrawXBM(&u8g2, 42, 26, 6, 6, musicNoteIcon);
+
+  unsigned char waveIcon[] = {0xc4,0xea,0xd1,0xc0,0xf9,0xe7};
+  u8g2_DrawXBM(&u8g2, 72, 26, 6, 6, waveIcon);
+
+  unsigned char reverbIcon[] = {0xc9,0xd2,0xc9,0xd2,0xc9,0xd2};
+  u8g2_DrawXBM(&u8g2, 112, 26, 6, 6, reverbIcon);
+
+  unsigned char pitchIcon[] = {0xd5,0xe5,0xe7,0xe2,0xe2,0xd2};
+  u8g2_DrawXBM(&u8g2, 80, 1, 6, 6, pitchIcon);
+
+  unsigned char modulationIcon[] = {0xca,0xeb,0xff,0xff,0xeb,0xca};
+  u8g2_DrawXBM(&u8g2, 80, 11, 6, 6, modulationIcon);
 }
 
 

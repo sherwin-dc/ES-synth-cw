@@ -16,7 +16,6 @@ const int32_t x_mid = 1790;
 const int32_t xy_min = 0;
 const int32_t xy_max = 4030;
 
-uint32_t ADC[2];
 
 //JOYSTICK SHOULD BE USED TO MODULATE THE FREQUENCY 
 void readJoystick(void* params) {
@@ -44,8 +43,7 @@ void readJoystick(void* params) {
 
         // HAL_ADC_Stop(&hadc1);
         uint32_t v1, v2;
-        v1 = __atomic_load_n(&ADC[0], __ATOMIC_RELAXED);
-        v2 = __atomic_load_n(&ADC[1], __ATOMIC_RELAXED);
+     
         // print(v1);
         // print(v2);
         // delay_microseconds(500);
@@ -71,7 +69,7 @@ void readJoystick(void* params) {
 
 extern "C" void init_joystick() {
     DEBUG_PRINT("Initializing Joystick Read");
-    HAL_ADC_Start_DMA(&hadc1, ADC, 2);
+    HAL_ADC_Start_DMA(&hadc1, &joystick.pitch, 2);
 
 
     // if (xTaskCreate(readJoystick, "Read Joystick", 256, NULL, 2, NULL) != pdPASS) {

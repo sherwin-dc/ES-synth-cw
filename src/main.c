@@ -61,9 +61,8 @@ volatile uint8_t playedNotes [9*12] = {0}; // Global variable which is used to a
 volatile uint8_t volume = 3; // Global variable which stores volume of piano
 volatile uint8_t octave = 4; // Global variable which stores octave of piano
 volatile uint8_t sound = 0; // Global variable which stores sound type of piano
-volatile uint8_t reverb = 0; // Global variable which stores reverb of piano
-volatile int8_t modulation = 0;
-volatile int8_t pitch = 0;
+ADC joystick;
+volatile uint8_t reverb = 0;
 
 QueueHandle_t msgInQ;
 QueueHandle_t msgOutQ;

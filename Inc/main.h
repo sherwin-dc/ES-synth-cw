@@ -48,9 +48,12 @@ extern volatile uint8_t playedNotes [9*12]; // Global variable which is used to 
 extern volatile uint8_t volume; // Global variable which stores volume of piano
 extern volatile uint8_t octave; // Global variable which stores octave of piano
 extern volatile uint8_t sound; // Global variable which stores sound type of piano
-extern volatile uint8_t reverb; // Global variable which stores reverb of piano
-extern volatile int8_t modulation;
-extern volatile int8_t pitch;
+extern volatile uint8_t reverb;
+typedef struct {
+  uint32_t pitch;
+  uint32_t modulation;
+} ADC;
+extern ADC joystick;
 
 // handles incoming messages
 extern QueueHandle_t msgInQ;
