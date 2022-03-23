@@ -34,8 +34,10 @@ void Knob::update(uint8_t oldState, uint8_t newState) {
 
     //Reset notes played (This is to make sure that no note in the notesPlayed array will never
     // turn off if we change the octave while a note is being played)
-    for(int i=0; i<9*12; i++){
-        __atomic_store_n(&playedNotes[i],0,__ATOMIC_RELAXED);
+    if(delta != 0){
+        for(int i=0; i<9*12; i++){
+             __atomic_store_n(&playedNotes[i],0,__ATOMIC_RELAXED);
+        }
     }
 } 
 

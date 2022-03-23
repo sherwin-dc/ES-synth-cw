@@ -63,6 +63,7 @@ int32_t chorusAccumulators [9*12*4] = {0}; // Array which holds extra accumulato
 
 uint32_t steps [600] = {0}; // Array which holds the data which the DMA gives the DAC
 int32_t stepsNOFF [600] = {0}; // Array with same data as steps but centred around 0
+const uint32_t emptyArray [300] = {0}; // Empty array of all 0s for the DMA to read, if module is slave
 
 int32_t reverbArray [3300] = {0}; // Array which holds the data which the reverb function uses
 uint8_t reverbIndex = 0; // Keeps track of where in the array we should write data next
@@ -156,8 +157,8 @@ extern "C" void sampleSound(uint8_t region){
   uint8_t tmpReverb = __atomic_load_n(&reverb,__ATOMIC_RELAXED); // Read in the reverb
     if(tmpReverb > 0){
       for(int i=0; i<300; i++){
-        tmpStepsNOFF[i] *= 1.0F-float(tmpReverb)/10;
-        tmpStepsNOFF[i] += (float(tmpReverb)/10)*reverbArray[i+reverbIndex*300];
+        tmpStepsNOFF[i] *= 1.0F-float(tmpReverb)/8;
+        tmpStepsNOFF[i] += (float(tmpReverb)/8)*reverbArray[i+reverbIndex*300];
       }
 
     // Copy tmpStepsNOFF to queue used by reverb
@@ -170,11 +171,9 @@ extern "C" void sampleSound(uint8_t region){
     }
   }
   
-
   // Add pitch by changing frequency of DMA
   uint32_t rawPitch = __atomic_load_n(&joystick.pitch,__ATOMIC_RELAXED); // Read in the pitch
   __HAL_TIM_SET_AUTORELOAD(&htim7, uint32_t((1.0F + 0.0594F*((float(rawPitch>>6) - 32)/64))*3273)); // Set DMA frequency depending on the pitch
-
 
   // Offset tmpStepsNOFF to create tmpSteps
   for(int i = 0; i <300; i++){
@@ -182,9 +181,13 @@ extern "C" void sampleSound(uint8_t region){
     recordingSteps[i] = tmpStepsNOFF[i] + 128;
   }
 
-
-  // Copy array to memory used by DMA 
-  std::copy(tmpSteps, tmpSteps + 300, steps + region*300);
+  if(__atomic_load_n(&isMaster, __ATOMIC_RELAXED)){ // If module is master play sound
+    // Copy array to memory used by DMA 
+    std::copy(tmpSteps, tmpSteps + 300, steps + region*300);
+  }else{ // If module is slave do not play sound
+    // Copy empty array to memory used by DMA 
+    std::copy(emptyArray, emptyArray + 300, steps + region*300);
+  }
 
 
   if(__atomic_load_n(&isRecording, __ATOMIC_RELAXED)) {

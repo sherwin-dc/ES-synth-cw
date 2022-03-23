@@ -69,11 +69,8 @@ void setRow(uint8_t rowIdx) {
       HAL_GPIO_WritePin(Row_Sel_En_GPIO_Port, Row_Sel_En_Pin, GPIO_PIN_SET);
 }
 
-
-// Check whether knobs are being turned
-// ! Also detects whether keys state has been changed
-// can we change the fucntion name?
-void knobDecode(boardkeys_t newKeys) {
+// Detects changes to key presses
+void detectKeyPress(boardkeys_t newKeys) {
 
       uint8_t TX_Message[8] = {0}; // Stores outgoing messages on the CAN Bus
 
@@ -99,19 +96,21 @@ void knobDecode(boardkeys_t newKeys) {
                   anyKeyPressed = true;
                   // TX_Message[1] = i;                  
                   // TX_Message[2] = octave;                  
-                  TX_Message[1] = i + 48;
-                  TX_Message[2] = octave + 48;
+                  TX_Message[1] = i;
+                  TX_Message[2] = octave;
 
                   // Button has been pressed
                   if (oldKeyState==1)      { TX_Message[0] = 'P'; }
                   // Button has been released
                   else if (oldKeyState==0) { TX_Message[0] = 'R'; }
 
-                  // DEBUG_PRINT("TX CAN MSG");
                   // CAN_TX(0x123, TX_Message);      // Transmit message over CAN
                   //! This queue seems to block indefinitely sometimes
                   //! because transmitCANMessages does not seem to be running
-                  // xQueueSend(msgOutQ, TX_Message, portMAX_DELAY);
+                  // DEBUG_PRINT("TX CAN MSG");
+                  if (isMaster==0){
+                        xQueueSend(msgOutQ, TX_Message, portMAX_DELAY);
+                  }
             } 
       }
       
@@ -148,7 +147,22 @@ void scanKeysTask(void * params) {
                         uint8_t bitShiftedResult = (keys & bitmask) >> j;
                         keyPressed[i*4 + j] = bitShiftedResult;
                   }
+            }
 
+            // Update isMaster
+            // Knob 0 S
+            if (!keyPressed[24] && isMaster==1)   {
+                  __atomic_store_n(&isMaster, 0, __ATOMIC_RELAXED);
+                  // if (transmitCANMessage_handle!=NULL) vTaskSuspend(*transmitCANMessage_handle);
+                  // if (decodeCANMessage_handle!=NULL) vTaskResume(*decodeCANMessage_handle);
+                  DEBUG_PRINT("Res decode");
+            }
+            // Knob 1 S
+            if (!keyPressed[25] && isMaster==0) {
+                  __atomic_store_n(&isMaster, 1, __ATOMIC_RELAXED);
+                  // if (decodeCANMessage_handle!=NULL) vTaskSuspend(*decodeCANMessage_handle);
+                  // if (transmitCANMessage_handle!=NULL) vTaskResume(*transmitCANMessage_handle);
+                  DEBUG_PRINT("Res trans");
             }
 
             //Update which notes are being played
@@ -169,7 +183,7 @@ void scanKeysTask(void * params) {
 
             // Decode whether any of the knobs are being turned
             // ! And if key state has changed since previous iteration
-            knobDecode(keyPressed);
+            detectKeyPress(keyPressed);
 
             // DEBUG_PRINT("2");
 

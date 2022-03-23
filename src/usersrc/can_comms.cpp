@@ -24,57 +24,15 @@
 extern "C" {
 #endif
 
-
-// Must match the declaration in the header file
-#ifdef __cplusplus
-    //Pointer to user ISRS
-    // extern "C" void (*CAN_RX_ISR_PTR)() = NULL;
-    // extern "C" void (*CAN_TX_ISR_PTR)() = NULL;
-    void (*CAN_RX_ISR_PTR)() = NULL;
-    void (*CAN_TX_ISR_PTR)() = NULL;
-
-#else
-    void (*CAN_RX_ISR_PTR)() = NULL;
-    void (*CAN_TX_ISR_PTR)() = NULL;
-#endif
-
-/*
-//Initialise CAN dependencies: GPIO and clock
-void HAL_CAN_MspInit(CAN_HandleTypeDef* hcan1) {
-
-  //Set up the pin initialisation
-  GPIO_InitTypeDef GPIO_InitCAN_TX = {
-    GPIO_PIN_12,            //PA12 is CAN TX
-    GPIO_MODE_AF_PP,        //Alternate function, push-pull driver
-    GPIO_NOPULL,            //No pull-up
-    GPIO_SPEED_FREQ_MEDIUM, //Medium slew rate
-    GPIO_AF9_CAN1           //Alternate function is CAN
-    };
-
-  GPIO_InitTypeDef GPIO_InitCAN_RX = {
-    GPIO_PIN_11,            //PA11 is CAN RX
-    GPIO_MODE_AF_PP,        //Alternate function, push-pull driver
-    GPIO_PULLUP,            //Pull-up enabled
-    GPIO_SPEED_FREQ_MEDIUM, //Medium slew rate
-    GPIO_AF9_CAN1           //Alternate function is CAN    
-    };
-
-  //Enable the CAN and GPIO clocks
-  __HAL_RCC_CAN1_CLK_ENABLE(); //Enable the CAN interface clock
-  __HAL_RCC_GPIOA_CLK_ENABLE(); //Enable the clock for the CAN GPIOs
-
-  //Initialise the pins
-  HAL_GPIO_Init(GPIOA, &GPIO_InitCAN_TX); //Configure CAN pin
-  HAL_GPIO_Init(GPIOA, &GPIO_InitCAN_RX); //Configure CAN pin
-}
-*/
+  //Pointer to user ISRS
+  void (*CAN_RX_ISR_PTR)() = NULL;
+  void (*CAN_TX_ISR_PTR)() = NULL;
 
 uint32_t CAN_Init(bool loopback) {
   if (loopback)
     hcan1.Init.Mode = CAN_MODE_LOOPBACK;
   return (uint32_t) HAL_CAN_Init(&hcan1);
 }
-
 
 uint32_t setCANFilter(uint32_t filterID, uint32_t maskID, uint32_t filterBank) {
 
@@ -95,11 +53,9 @@ uint32_t setCANFilter(uint32_t filterID, uint32_t maskID, uint32_t filterBank) {
   return (uint32_t) HAL_CAN_ConfigFilter(&hcan1, &filterInfo);
 }
 
-
 uint32_t CAN_Start() {
   return (uint32_t) HAL_CAN_Start(&hcan1);
 }
-
 
 uint32_t CAN_TX(uint32_t ID, uint8_t data[8]) {
 
@@ -120,11 +76,9 @@ uint32_t CAN_TX(uint32_t ID, uint8_t data[8]) {
   return (uint32_t) HAL_CAN_AddTxMessage(&hcan1, &txHeader, data, NULL);
 }
 
-
 uint32_t CAN_CheckRXLevel() {
   return HAL_CAN_GetRxFifoFillLevel(&hcan1, 0);
 }
-
 
 uint32_t CAN_RX(uint32_t *ID, uint8_t data[8]) {
   CAN_RxHeaderTypeDef rxHeader;
@@ -198,19 +152,13 @@ void HAL_CAN_TxMailbox2CompleteCallback (CAN_HandleTypeDef * hcan){
 }
 
 void CAN_RX_ISR() {
-    uint8_t RX_Message_ISR[8];
-    uint32_t ID;
-    DEBUG_PRINT("CAN_RX");
-    uint32_t rx_res = CAN_RX(&ID, RX_Message_ISR);
-    print(rx_res==0);
-    
-    DEBUG_PRINT("msgInQ waiting | sending:");
-    print( (uint32_t)uxQueueMessagesWaitingFromISR(msgInQ) );
-
-    BaseType_t queueSendRes = pdTRUE; // Placeholder
-    queueSendRes = xQueueSendFromISR(msgInQ, RX_Message_ISR, NULL);
-    DEBUG_PRINT("xQueueSend");
-    print(queueSendRes==pdTRUE);
+  // Only recieve if we are reciever
+  uint8_t RX_Message_ISR[8];
+  uint32_t ID;
+  uint32_t rx_res = CAN_RX(&ID, RX_Message_ISR);
+  if (isMaster){
+    xQueueSendFromISR(msgInQ, RX_Message_ISR, NULL);
+  }
 }
 
 void CAN_TX_ISR(){
@@ -219,56 +167,48 @@ void CAN_TX_ISR(){
 
 // Create a decode thread to handle incoming CAN messages
 void decodeCANMessages(void *params) {
-    // THESE TWO LINES DO NOT NEED TO BE HERE; ADDED BY EDVARD TO STOP TASK FROM TAKING UP CPU TIME
-    // const TickType_t xFrequency = 25/portTICK_PERIOD_MS;
-    // TickType_t xLastWakeTime = xTaskGetTickCount();
-    
-    DEBUG_PRINT("Enter");
-    while(1){
-      BaseType_t queueReceiveRes = pdPASS;  // Placeholder
-      // ? Try toggling between portMAX_DELAY (blocks forever) and (TickType_t)0 (no blocking) for testing
-      // ? Not too sure what is being recieved. Playing around with task priority helps.
-      // ? Intended operation (portMAX_DELAY) Check if queue is empty, and block (yield) if it is.
-      // ? However, setting this means that it yields forever (nothing is read)
-      // ? Setting ticks to 0 means that the task always polls and blocks execution of everything else.
-      // ? Perhaps it needs to be scheduled as well.
-      // ? The thing is that xQueueRecieve never returns.
-      // ? Fix this later
-      DEBUG_PRINT("msgInQ waiting | sending:");
-      print( (uint32_t)uxQueueMessagesWaiting(msgInQ) );
-      print( (uint32_t)uxQueueSpacesAvailable(msgInQ) );
-      // queueReceiveRes = xQueueReceive(msgInQ, (void*)RX_Message, (TickType_t)0);
-      queueReceiveRes = xQueueReceive(msgInQ, (void*)RX_Message, portMAX_DELAY);
-      // DEBUG_PRINT("Send");
-      if ( queueReceiveRes == pdPASS ){
-        // DEBUG_PRINT("can rx smth");
-        print(RX_Message[0]);
-        print(RX_Message[1]);
-        print(RX_Message[2]);
-      } else {
-        DEBUG_PRINT("x");
-      }
-      // DEBUG_PRINT("Exit CAN decode");
+  while(1){
+    xQueueReceive(msgInQ, (void*)RX_Message, portMAX_DELAY);
+    print(RX_Message[0]);
+    print(RX_Message[1]);
+    print(RX_Message[2]);
 
-      // THIS LINE DOES NOT NEED TO BE HERE; ADDED BY EDVARD TO STOP TASK FROM TAKING UP CPU TIME
-      // vTaskDelayUntil( &xLastWakeTime, xFrequency );
-    }
-    // DEBUG_PRINT("decodeCANMessages exited!");
-    vTaskDelete(NULL);
+    // one octave has 12 notes
+    uint8_t playedNotesIdx = RX_Message[2] * 12 + RX_Message[1];
+    __atomic_store_n(&playedNotes[playedNotesIdx], RX_Message[0]=='P', __ATOMIC_RELAXED);
+  
+    // Suspend ourselves if we are master (no need to decode any messages)
+    // if (isMaster) {
+    //   DEBUG_PRINT("Suspending");
+    //   vTaskSuspend(NULL);
+    // }
+  }
 }
 
 void transmitCANMessages(void* params){
   uint8_t msgOut[8];
   while(1){
+    // DEBUG_PRINT("msgOutQ waiting | sending:");
+    // print( (uint32_t)uxQueueMessagesWaiting(msgOutQ) );
+    // print( (uint32_t)uxQueueSpacesAvailable(msgOutQ) );
+
+    // Only transmit if we are master
     xQueueReceive(msgOutQ, msgOut, portMAX_DELAY);
     xSemaphoreTake(CAN_TX_Semaphore, portMAX_DELAY);
+    DEBUG_PRINT("Tranmsitting CAN");
     CAN_TX(0x123, msgOut);
+    
+    // Suspend ourselves if we are not master
+    // if (isMaster==0) {
+    //   DEBUG_PRINT("Suspending");
+    //   vTaskSuspend(NULL);
+    // }
   }
 }
 
 void init_can_rx_decode(){
     DEBUG_PRINT("Initializing CAN RX Decode");
-    if (xTaskCreate(decodeCANMessages, "CAN Decoder", 256, NULL, 3, NULL) != pdPASS) {
+    if (xTaskCreate(decodeCANMessages, "CAN Decoder", 256, NULL, 3, decodeCANMessage_handle) != pdPASS) {
         DEBUG_PRINT("ERROR");
         print(xPortGetFreeHeapSize());
     }
@@ -276,7 +216,7 @@ void init_can_rx_decode(){
 
 void init_can_tx_decode(){
     DEBUG_PRINT("Initializing CAN TX Decode");
-    if (xTaskCreate(transmitCANMessages, "CAN Transmitter", 256, NULL, 3, NULL) != pdPASS) {
+    if (xTaskCreate(transmitCANMessages, "CAN Transmitter", 256, NULL, 4, transmitCANMessage_handle) != pdPASS) {
         DEBUG_PRINT("ERROR");
         print(xPortGetFreeHeapSize());
     }

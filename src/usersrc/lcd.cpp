@@ -133,8 +133,25 @@ void update_lcd(void * params) {
     // START_TIMING
     // DEBUG_PRINT("1");
 
-    // u8g2_ClearBuffer(&u8g2); // Clear content on screen
+    u8g2_ClearBuffer(&u8g2); // Clear content on screen
     u8g2_SetFont(&u8g2, u8g2_font_smallsimple_tr); // Set font size
+
+    u8g2_SetDrawColor(&u8g2, 2);
+    // draw white keys
+    DRAW_WHITE_KEY(0);
+    DRAW_WHITE_KEY(1);
+    DRAW_WHITE_KEY(2);
+    DRAW_WHITE_KEY(3);
+    DRAW_WHITE_KEY(4);
+    DRAW_WHITE_KEY(5);
+    DRAW_WHITE_KEY(6);
+
+    // draw black keys
+    DRAW_BLACK_KEY(0);
+    DRAW_BLACK_KEY(1);
+    DRAW_BLACK_KEY(3);
+    DRAW_BLACK_KEY(4);
+    DRAW_BLACK_KEY(5);
 
     // bitbanged array for all notes
     uint16_t pianoKeys[12] = {0};
@@ -217,55 +234,58 @@ void update_lcd(void * params) {
     u8g2_SetDrawColor(&u8g2, 1);
     u8g2_SetFont(&u8g2, u8g2_font_5x7_mf);
 
-    // Write out the volume
-    char vol [2] = {0};
-    vol[0] = __atomic_load_n(&volume,__ATOMIC_RELAXED) + 48;
-    u8g2_DrawStr(&u8g2, 10, 32, vol);
-
     // Write out the octave
     char oct [2] = {0};
     oct[0] = __atomic_load_n(&octave,__ATOMIC_RELAXED) + 48;
     u8g2_DrawStr(&u8g2, 50, 32, oct);
 
-    // Write out the waveform
-    u8g2_DrawStr(&u8g2, 80, 32, sounds[__atomic_load_n(&sound,__ATOMIC_RELAXED)].c_str());
+    uint8_t tmpIsMaster = __atomic_load_n(&isMaster,__ATOMIC_RELAXED);
+    if (tmpIsMaster) {
+      // Write out the volume
+      char vol [2] = {0};
+      vol[0] = __atomic_load_n(&volume,__ATOMIC_RELAXED) + 48;
+      u8g2_DrawStr(&u8g2, 10, 32, vol);
 
-    // Write out the reverb
-    char rev [2] = {0};
-    rev[0] = __atomic_load_n(&reverb,__ATOMIC_RELAXED) + 48;
-    u8g2_DrawStr(&u8g2, 120, 32, rev);
+      // Write out the waveform
+      u8g2_DrawStr(&u8g2, 80, 32, sounds[__atomic_load_n(&sound,__ATOMIC_RELAXED)].c_str());
+
+      // Write out the reverb
+      char rev [2] = {0};
+      rev[0] = __atomic_load_n(&reverb,__ATOMIC_RELAXED) + 48;
+      u8g2_DrawStr(&u8g2, 120, 32, rev);
 
 
-    // Print out pitch and modulation (from joystick)
-    uint32_t pitch = __atomic_load_n(&joystick.pitch ,__ATOMIC_RELAXED);
-    u8g2_DrawStr(&u8g2, 86, 7, u8x8_u16toa(pitch/100, 2));
-    
-    uint32_t modulation = __atomic_load_n(&joystick.modulation,__ATOMIC_RELAXED);
-    u8g2_DrawStr(&u8g2, 116, 7, u8x8_u16toa(modulation/100, 2));
+      // Print out pitch and modulation (from joystick)
+      uint32_t pitch = __atomic_load_n(&joystick.pitch ,__ATOMIC_RELAXED);
+      u8g2_DrawStr(&u8g2, 86, 7, u8x8_u16toa(pitch/100, 2));
+      
+      uint32_t modulation = __atomic_load_n(&joystick.modulation,__ATOMIC_RELAXED);
+      u8g2_DrawStr(&u8g2, 116, 7, u8x8_u16toa(modulation/100, 2));
 
-    // Draw out recording
-    u8g2_SetFontMode(&u8g2, 1);
-    unsigned char recordIcon[] = {0xff,0x81,0x99,0xbd,0xbd,0x99,0x81,0xff};
+      // Draw out recording
+      u8g2_SetFontMode(&u8g2, 1);
+      unsigned char recordIcon[] = {0xff,0x81,0x99,0xbd,0xbd,0x99,0x81,0xff};
 
-    if(__atomic_load_n(&isRecording, __ATOMIC_RELAXED)) {
-      ++recordingBlinking;
-      if (recordingBlinking==5) {
-        unsigned char currentlyRecordingIcon[] = {0xff,0x81,0x81,0x81,0x81,0x81,0x81,0xff};
-        u8g2_DrawXBM(&u8g2, 78, 12, 8, 8, currentlyRecordingIcon);
-      } else if (recordingBlinking==10) {
-        recordingBlinking = 0;
+      if(__atomic_load_n(&isRecording, __ATOMIC_RELAXED)) {
+        ++recordingBlinking;
+        if (recordingBlinking==5) {
+          unsigned char currentlyRecordingIcon[] = {0xff,0x81,0x81,0x81,0x81,0x81,0x81,0xff};
+          u8g2_DrawXBM(&u8g2, 78, 12, 8, 8, currentlyRecordingIcon);
+        } else if (recordingBlinking==10) {
+          recordingBlinking = 0;
+          u8g2_DrawXBM(&u8g2, 78, 12, 8, 8, recordIcon);
+        }
+        
+        unsigned char stopRecordingIcon[] = {0xff,0x81,0xbd,0xbd,0xbd,0xbd,0x81,0xff};
+        u8g2_DrawXBM(&u8g2, 116, 12, 8, 8, stopRecordingIcon);
+        
+      } else {
+        u8g2_SetDrawColor(&u8g2, 0);
+        u8g2_DrawBox(&u8g2, 116, 12, 8, 8);
+        u8g2_SetDrawColor(&u8g2, 1);
+        
         u8g2_DrawXBM(&u8g2, 78, 12, 8, 8, recordIcon);
       }
-      
-      unsigned char stopRecordingIcon[] = {0xff,0x81,0xbd,0xbd,0xbd,0xbd,0x81,0xff};
-      u8g2_DrawXBM(&u8g2, 116, 12, 8, 8, stopRecordingIcon);
-      
-    } else {
-      u8g2_SetDrawColor(&u8g2, 0);
-      u8g2_DrawBox(&u8g2, 116, 12, 8, 8);
-      u8g2_SetDrawColor(&u8g2, 1);
-      
-      u8g2_DrawXBM(&u8g2, 78, 12, 8, 8, recordIcon);
     }
     
 
@@ -300,22 +320,22 @@ void init_lcd() {
   u8g2_SetPowerSave(&u8g2, 0); // wake up display*/
 
   u8g2_ClearBuffer(&u8g2);
-  u8g2_SetDrawColor(&u8g2, 2);
-  // draw white keys
-  DRAW_WHITE_KEY(0);
-  DRAW_WHITE_KEY(1);
-  DRAW_WHITE_KEY(2);
-  DRAW_WHITE_KEY(3);
-  DRAW_WHITE_KEY(4);
-  DRAW_WHITE_KEY(5);
-  DRAW_WHITE_KEY(6);
+  // u8g2_SetDrawColor(&u8g2, 2);
+  // // draw white keys
+  // DRAW_WHITE_KEY(0);
+  // DRAW_WHITE_KEY(1);
+  // DRAW_WHITE_KEY(2);
+  // DRAW_WHITE_KEY(3);
+  // DRAW_WHITE_KEY(4);
+  // DRAW_WHITE_KEY(5);
+  // DRAW_WHITE_KEY(6);
 
-  // draw black keys
-  DRAW_BLACK_KEY(0);
-  DRAW_BLACK_KEY(1);
-  DRAW_BLACK_KEY(3);
-  DRAW_BLACK_KEY(4);
-  DRAW_BLACK_KEY(5);
+  // // draw black keys
+  // DRAW_BLACK_KEY(0);
+  // DRAW_BLACK_KEY(1);
+  // DRAW_BLACK_KEY(3);
+  // DRAW_BLACK_KEY(4);
+  // DRAW_BLACK_KEY(5);
 
 
   u8g2_SetDrawColor(&u8g2, 1);
