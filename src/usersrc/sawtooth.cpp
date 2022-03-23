@@ -61,8 +61,8 @@ const int32_t sine [256] = {
 int32_t accumulators [9*12] = {0}; // Array which holds an accumulator for all notes
 int32_t chorusAccumulators [9*12*4] = {0}; // Array which holds extra accumulators used in chorus mode
 
-uint32_t steps [1100] = {0}; // Array which holds the data which the DMA gives the DAC
-int32_t stepsNOFF [1100] = {0}; // Array with same data as steps but centred around 0
+uint32_t steps [600] = {0}; // Array which holds the data which the DMA gives the DAC
+int32_t stepsNOFF [600] = {0}; // Array with same data as steps but centred around 0
 
 int32_t reverbArray [3300] = {0}; // Array which holds the data which the reverb function uses
 uint8_t reverbIndex = 0; // Keeps track of where in the array we should write data next
@@ -72,9 +72,9 @@ uint32_t wasRecording = 0; // Keep track of whether a recording as going on
 // Overwrite section of array read by DMA, region determines which section (either 0 or 1) 
 extern "C" void sampleSound(uint8_t region){
 
-  uint32_t tmpSteps [550] = {0}; // Array to temporarily hold the values which we write to steps
-  int32_t tmpStepsNOFF [550] = {0}; // Array to temporarily hold the same data as steps but centred around 0
-  uint8_t recordingSteps[550] = {0};
+  uint32_t tmpSteps [300] = {0}; // Array to temporarily hold the values which we write to steps
+  int32_t tmpStepsNOFF [300] = {0}; // Array to temporarily hold the same data as steps but centred around 0
+  uint8_t recordingSteps[300] = {0};
 
   // Read in the volume
   uint8_t tmpVolume = __atomic_load_n(&volume,__ATOMIC_RELAXED);
@@ -84,7 +84,7 @@ extern "C" void sampleSound(uint8_t region){
     case 0: // Sawtooth
       for(int i=0; i<9*12; i++){
         if(__atomic_load_n(&playedNotes[i],__ATOMIC_RELAXED)){
-          for(int j=0; j<550; j++){
+          for(int j=0; j<300; j++){
             tmpStepsNOFF[j] += accumulators[i] >> (27-tmpVolume);
             accumulators[i] += stepSizes[i];
           }
@@ -95,7 +95,7 @@ extern "C" void sampleSound(uint8_t region){
     case 1: // Polyphony
       for(int i=0; i<9*12; i++){
         if(__atomic_load_n(&playedNotes[i],__ATOMIC_RELAXED)){
-          for(int j=0; j<550; j++){
+          for(int j=0; j<300; j++){
             tmpStepsNOFF[j] += accumulators[i] >> (27-tmpVolume);
             accumulators[i] += stepSizes[i];
           }
@@ -105,7 +105,7 @@ extern "C" void sampleSound(uint8_t region){
     case 2: // Chorus
       for(int i=0; i<9*12; i++){
         if(__atomic_load_n(&playedNotes[i],__ATOMIC_RELAXED)){
-          for(int j=0; j<550; j++){
+          for(int j=0; j<300; j++){
             tmpStepsNOFF[j] += int32_t(0.70F*accumulators[i]) >> (27-tmpVolume);
             accumulators[i] += stepSizes[i];
             tmpStepsNOFF[j] += int32_t(0.5F*chorusAccumulators[i]) >> (27-tmpVolume);
@@ -120,7 +120,7 @@ extern "C" void sampleSound(uint8_t region){
     case 3: // LASER
       for(int i=0; i<9*12; i++){
         if(__atomic_load_n(&playedNotes[i],__ATOMIC_RELAXED)){
-          for(int j=0; j<550; j++){
+          for(int j=0; j<300; j++){
             tmpStepsNOFF[j] += int32_t(0.63F*accumulators[i]) >> (27-tmpVolume);
             accumulators[i] += stepSizes[i];
             tmpStepsNOFF[j] += int32_t(0.316F*chorusAccumulators[i]) >> (27-tmpVolume);
@@ -138,7 +138,7 @@ extern "C" void sampleSound(uint8_t region){
     case 4: // Sinewave
       for(int i=0; i<9*12; i++){
         if(__atomic_load_n(&playedNotes[i],__ATOMIC_RELAXED)){
-          for(int j=0; j<550; j++){
+          for(int j=0; j<300; j++){
             tmpStepsNOFF[j] += sine[uint32_t(accumulators[i]+4294967295/2)>>25] >> (27-tmpVolume);
             accumulators[i] += stepSizes[i];
           }
@@ -155,15 +155,15 @@ extern "C" void sampleSound(uint8_t region){
   // Add reverb
   uint8_t tmpReverb = __atomic_load_n(&reverb,__ATOMIC_RELAXED); // Read in the reverb
     if(tmpReverb > 0){
-      for(int i=0; i<550; i++){
+      for(int i=0; i<300; i++){
         tmpStepsNOFF[i] *= 1.0F-float(tmpReverb)/10;
-        tmpStepsNOFF[i] += (float(tmpReverb)/10)*reverbArray[i+reverbIndex*550];
+        tmpStepsNOFF[i] += (float(tmpReverb)/10)*reverbArray[i+reverbIndex*300];
       }
 
     // Copy tmpStepsNOFF to queue used by reverb
-    std::copy(tmpStepsNOFF, tmpStepsNOFF + 550, reverbArray + reverbIndex*550);
+    std::copy(tmpStepsNOFF, tmpStepsNOFF + 300, reverbArray + reverbIndex*300);
 
-    if(reverbIndex >= 5){
+    if(reverbIndex >= 10){
       reverbIndex = 0;
     }else{
       reverbIndex++;
@@ -177,24 +177,26 @@ extern "C" void sampleSound(uint8_t region){
 
 
   // Offset tmpStepsNOFF to create tmpSteps
-  for(int i = 0; i <550; i++){
+  for(int i = 0; i <300; i++){
     tmpSteps[i] = uint32_t(tmpStepsNOFF[i] + 2048);
     recordingSteps[i] = tmpStepsNOFF[i] + 128;
   }
 
+
   // Copy array to memory used by DMA 
-  std::copy(tmpSteps, tmpSteps + 550, steps + region*550);
+  std::copy(tmpSteps, tmpSteps + 300, steps + region*300);
+
 
   if(__atomic_load_n(&isRecording, __ATOMIC_RELAXED)) {
 
     // HAL_UART_DMAStop(&hlpuart1);
     if (wasRecording) {
       ++wasRecording;
-      HAL_UART_Transmit_DMA(&huart2, recordingSteps, 550);
+      HAL_UART_Transmit_DMA(&huart2, recordingSteps, 300);
     } else {
       wasRecording = 1;
       HAL_UART_Transmit(&huart2, (uint8_t*) "RECSTART", 8, 100);
-      HAL_UART_Transmit_DMA(&huart2, recordingSteps, 550);
+      HAL_UART_Transmit_DMA(&huart2, recordingSteps, 300);
     }
   } else {
     if (wasRecording) {
@@ -220,7 +222,7 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
 
 
 extern "C" void init_sound() {
-  HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_1, (uint32_t *) steps, 1100, DAC_ALIGN_12B_R);
+  HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_1, (uint32_t *) steps, 600, DAC_ALIGN_12B_R);
   HAL_TIM_Base_Start(&htim7);
 
   HAL_Delay(500);
