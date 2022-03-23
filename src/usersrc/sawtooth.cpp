@@ -69,10 +69,6 @@ uint8_t reverbIndex = 0; // Keeps track of where in the array we should write da
 
 uint32_t wasRecording = 0; // Keep track of whether a recording as going on
 
-const uint32_t PITCHMID = 2007;
-const uint32_t PITCHMAX = 4030;
-const uint32_t PITCHMAX_MID = PITCHMAX - PITCHMID;
-
 // Overwrite section of array read by DMA, region determines which section (either 0 or 1) 
 extern "C" void sampleSound(uint8_t region){
 
@@ -83,25 +79,14 @@ extern "C" void sampleSound(uint8_t region){
   // Read in the volume
   uint8_t tmpVolume = __atomic_load_n(&volume,__ATOMIC_RELAXED);
 
-  // Read in the pitch
-  uint32_t rawPitch = __atomic_load_n(&joystick.pitch,__ATOMIC_RELAXED);
-
   // Calculate what the array should be for the next iteration
   switch(__atomic_load_n(&sound,__ATOMIC_RELAXED)) {
     case 0: // Sawtooth
       for(int i=0; i<9*12; i++){
         if(__atomic_load_n(&playedNotes[i],__ATOMIC_RELAXED)){
           for(int j=0; j<550; j++){
-            tmpStepsNOFF[j] = accumulators[i] >> (27-tmpVolume);
-            // accumulators[i] += stepSizes[i];
-            // normalise pitch
-            int32_t stepSize =  rawPitch < PITCHMID ?
-              // pitch down
-              stepSizes[i-1] + ( (stepSizes[i]-stepSizes[i-1]) * rawPitch ) / PITCHMID :
-              // pitch up
-              stepSizes[i] + ( (stepSizes[i+1]-stepSizes[i]) * (PITCHMAX - rawPitch) ) / PITCHMAX_MID;
-            
-            accumulators[i] += stepSize;
+            tmpStepsNOFF[j] += accumulators[i] >> (27-tmpVolume);
+            accumulators[i] += stepSizes[i];
           }
           break;
         }
@@ -184,6 +169,12 @@ extern "C" void sampleSound(uint8_t region){
       reverbIndex++;
     }
   }
+  
+
+  // Add pitch by changing frequency of DMA
+  uint32_t rawPitch = __atomic_load_n(&joystick.pitch,__ATOMIC_RELAXED); // Read in the pitch
+  __HAL_TIM_SET_AUTORELOAD(&htim7, uint32_t((1.0F + 0.0594F*((float(rawPitch>>6) - 32)/64))*3273)); // Set DMA frequency depending on the pitch
+
 
   // Offset tmpStepsNOFF to create tmpSteps
   for(int i = 0; i <550; i++){
@@ -193,9 +184,6 @@ extern "C" void sampleSound(uint8_t region){
 
   // Copy array to memory used by DMA 
   std::copy(tmpSteps, tmpSteps + 550, steps + region*550);
-
-  // uint8_t * tmpSteps_p = reinterpret_cast<uint8_t*>(&tmpSteps[0]);
-  
 
   if(__atomic_load_n(&isRecording, __ATOMIC_RELAXED)) {
 
