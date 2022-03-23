@@ -238,9 +238,7 @@ extern "C" void init_sound() {
   HAL_Delay(500);
   __HAL_TIM_SET_AUTORELOAD(&htim7, 3273); // Set DMA to work at 22 kHz
 
-  //HAL_Delay(500);
   //HAL_DAC_Stop_DMA(&hdac1, DAC_CHANNEL_1);
-
 }
 
 
