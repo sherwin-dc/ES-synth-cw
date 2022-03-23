@@ -106,6 +106,19 @@ The first extension to the functionality of the synthesizer is Polyphony, i.e. b
 
 ### Additional Synth Sound Profiles
 
+1. #### Poly
+
+This sound profile is identical to the standard sawtooth sound profile, except that polyphony is enabled when this sound profile is selected.
+
+2. #### Chorus
+
+The chorus sound profile gives the piano a *richer* sound. Chorus still uses sawtooth waveforms to produce different frequencies, however a note no longer consists of a sawtooth waveform with a single frequency. Instead, when a note is played
+
+This sound profile still uses sawtooth waveforms to play a frequency, but whenever a note is played . When this sound profile is used 
+
+4. #### Laser
+5. #### Sine
+
 ### Reverb
 
 ### Pitch
