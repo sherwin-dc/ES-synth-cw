@@ -53,7 +53,7 @@ typedef struct {
   uint32_t pitch;
   uint32_t modulation;
 } ADC;
-extern ADC joystick;
+extern volatile ADC joystick;
 extern volatile uint8_t isRecording;
 
 // handles incoming messages
