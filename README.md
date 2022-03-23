@@ -14,27 +14,30 @@
 
 The following video showcases the functionality of the music synthesizer and highlights some of its advanced features.
 
-STMCube is used instead of STMduino framework to exploit functionality of the stm32 board such as DMA which will be discussed in section *TODO*. HAL functions are called directly
+*insert video*
+
+STMCube is used instead of STMduino framework to exploit functionality of the stm32 board such as DMA. HAL functions are called directly.
 
 ## Tasks Performed by System
 *talk about freeRTOS*
 
+DMA allows direct read/write to the memory. Some tasks were decided to implement using the DMA to reduce the load of the processor, as it was observed that the processor does not have sufficient capacity to deal with *too much high intesive tasks*. DMA is connected to the DAC and ADC directly to read and write from the analog pins on the MCU.
+
 Below table shows an overview of the tasks that are performed and their corresponding sample rate and priority number. Lower priority numbers denote low priority tasks. (src: https://www.freertos.org/RTOS-task-priority.html)
+
 | Task | Sample Rate (ms) | Priority Number |
 | --- | --- | --- |
 | scanKeysTask | 20 | 7 |
 | updateLCD | 100 | 1 |
+| DMA for ADC | 45.45 ± 5% | (DMA) |
 
-As `scanKeysTask` runs with a much higher frequency, it is assigned with a higher priority number compared to `updateLCD`.
-
-*talks about DMA*
-It was discovered that the processor was not able to deal with too much high intensive tasks that require reading and writing from the memory. Hence, DMA is utilised to ...
-
+As `scanKeysTask` runs with a much higher frequency, it is assigned with a higher priority number compared to `updateLCD`. The DMA for ADC has a variable sample rate which is implemented for pitch bend. Please refer to *section* for implementation details.
 
 ### scanKeysTask
 
-The task reads the GPIO digital pins (C0 - C3) and determine the state of the keys and knobs on the module. It also writes to the GPIO pins (RA0 - RA2) which allow different "rows" to be read from the key matrix. It also decodes the rotation of the knob by a state transition table. As state `01` and `10` of the knob are between detents of the knobs ... (*actually why lol*)
-As the sample rate is not high enough to detect all the transient states, the transition table below is adopted instead of that stated in the lab instruction:
+The task reads the GPIO digital pins (C0 - C3) and determine the state of the keys and knobs on the module. It also writes to the GPIO pins (RA0 - RA2) which allow different "rows" to be read from the key matrix. It also decodes the rotation of the knob by a state transition table. The task is ran with 20ms sample rate such that transient states of the knobs can be captured in most use case.
+
+As state `01` and `10` of the knob are between detents of the knobs, it is assumed that the next state must be the next detent in the same rotation direction. Hence the transition table below is adopted instead of that stated in the lab instruction. With such transition table, the corresponding data is only increment or decrement by one for ever detent. Although transitions cannot be correctly detected when the knobs are rotated fastly, it was decided that it is sufficient for majority of time.
 
 | Previous {B,A} | Current {B,A} | Rotation Variable |
 | --- | --- | --- |
@@ -44,8 +47,6 @@ As the sample rate is not high enough to detect all the transient states, the tr
 | 11 | 10 | -1 |
 
 The keys that are pressed and the rotation variable of the knobs are updated and stored in a shared data structure.
-
-*The task is ran with 20ms such that transient states of the knobs can be captrued*
 
 *TODO: CAN bus*
 
@@ -65,7 +66,7 @@ The function is called as an iterrupt. It reads the state of the keys and *featu
 
 ### DMA for ADC (joystick)
 
-To read both of the axis of the joystick, the ADC is configured to dual channel (scan) conversion mode. It reads the two channels (A0, A1) in one read and writes to the shared data.
+To read both of the axis of the joystick, the ADC is configured to dual channel (scan) conversion mode. It reads the two channels (A0, A1) in one read and writes to the shared data in the memory via DMA.
 
 
 
