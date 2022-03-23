@@ -78,7 +78,7 @@ To read both of the axis of the joystick, the ADC is configured to dual channel 
 
 ### playedNotes
 
-Information about which keys on the piano are being pressed is stored in a 108 element long uint8_t array called `playedNotes`. Though there are only 12 keys on each synthesizer, the `playedNotes` array is 108 elements long to make connecting multiple synthesizers together easier. The array elements give the states of each note in consecutive order from the deepest note to the highest note, starting with C0 at index 0 and going up to B8 at index 107. A zero entry means that the note is not being played a non-zero entry means that the note is being played.
+Information about which keys on the piano are being pressed is stored in a 108 element uint8_t array called `playedNotes`. Though there are only 12 keys on each synthesizer, the `playedNotes` array is 108 elements long to make connecting multiple synthesizers together easier. The array elements give the states of each note in consecutive order from the deepest note to the highest note, starting with C0 at index 0 and going up to B8 at index 107. A zero entry means that the note is not being played a non-zero entry means that the note is being played.
 
 The `playedNotes` array is accessed by the functions `sampleSound()`, `scanKeysTask()`, `Knob::update()`, `updateLCD()` and `decodeCANMessages()`. To ensure synchronisation between tasks, the array has been declared using the keyword `volatile` which means that the variable will be accessed from memory, rather than from local registers, each time it is used. To guarantee safe access between threads the elements in the `playedNotes` array are always accessed using atomic operations. Specifically, we use the functions `__atomic_load_n()` and `__atomic_store_n()`.
 
@@ -88,10 +88,11 @@ The `playedNotes` array is accessed by the functions `sampleSound()`, `scanKeysT
 
 ### joystick
 
+`joystick` is variable of type `ADC` which is a custom struct which has the member variables `pitch` and `modulation` which track the x-position and y-position of the joystick respectively. `pitch` and `modulation` are accessed by the function `sampleSound()` and a DMA. `sampleSound()` only reads from the variables, while the DMA only writes to the variables. To ensure that `sampleSound()` always uses the most up to date value of the variables, `joystick` has been declared as a volatile variable.
+
 ### steps
 
-`steps` is a 1100 element long uint32_t array.
-uint32_t steps [1100]
+`steps` is a 600 element uint32_t array found in sawtooth.cpp. The array is accessed both by the `sampleSound()` function and a DMA which writes the values stored in the array to the DAC. As `sampleSound()` only writes to and never reads `steps` it is not necessary to declare the array as volatile. To guarantee safe access to the array the `sampleSound()` function and the DMA never operate on data in the same half of the array. Whenever the DMA reads the middle element of the `steps` array it triggers an interrupt which calls `sampleSound()` which then updates the first half of the array. Likewise, when the DMA reads the last element of the `steps` array, an interrupt is triggered which causes *sampleSound()* to update the second half of the `steps` array. This way, the `sampleSound()` function never updates elements in the part of the array which is currently being read by the DMA.
 
 ### Queues (Is this what CAN uses? Does CAN use semaphores?)
 
@@ -101,7 +102,9 @@ uint32_t steps [1100]
 
 ### Polyphony
 
-### More synth sound profiles
+The first extension to the functionality of the synthesizer is Polyphony, i.e. being able to play multiple notes at the same time. Polyphony is enabled for all sound profiles except the standard sawtooth sound profile. Polyphony was implemented by first adding separate accumulators of type int32_t for all of the notes between C0 and B8. Whenever multiple notes are played at the same time, the values of the accumulators belonging to the notes being played are first shifted based on the current volume of the synth, then all added together. Finally, an offset is added to the sum of the accumulators to find which value should be written to the DAC. There is no limit on how many notes can be played at the same time and in theory all 108 notes between C0 and B8 can be played at the same time.
+
+### Additional Synth Sound Profiles
 
 ### Reverb
 
