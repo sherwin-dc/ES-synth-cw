@@ -112,12 +112,15 @@ This sound profile is identical to the standard sawtooth sound profile, except t
 
 2. #### Chorus
 
-The chorus sound profile gives the piano a *richer* sound. Chorus still uses sawtooth waveforms to produce different frequencies, however a note no longer consists of a sawtooth waveform with a single frequency. Instead, when a note is played
+The chorus sound profile gives the piano a "richer" sound. Chorus still uses sawtooth waveforms to produce different frequencies, however a note no longer consists of a single sawtooth waveform. Instead, each note consists of three sawtooth waveforms of slightly different frequencies. This produces a very pleasent sound profile and makes the piano sound like a choir.
 
-This sound profile still uses sawtooth waveforms to play a frequency, but whenever a note is played . When this sound profile is used 
+3. #### Laser
 
-4. #### Laser
-5. #### Sine
+The *Laser* sound profile is similar to the chorus sound profile, but now every note consists of 5 sawtooth waveforms of slightly different frequencies. The sound profile has been given the name "Laser" as pressing a note produces a sound similar to what laser blasters traditionally produce in movies. 
+
+4. #### Sine
+
+In the *Sine* sound profile the sawtooth waveforms have been replace by sine waves. Different frequency sine waves are produces by looping through an array, which holds one period of a sine wave, at different frequencies.
 
 ### Reverb
 
