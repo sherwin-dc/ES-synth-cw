@@ -53,8 +53,8 @@ Below table shows an overview of the tasks that are performed and their correspo
 | updateLCD | 100 | 1 |
 | decodeCANMessages | *?* | 2 |
 | transmitCANMessages | *?* | 3 |
-| DMA for ADC | nil *?* | (DMA) |
-| DMA for DAC | 45.45 ± 5%  | (DMA) |
+| DMA for ADC | NaN | (DMA) |
+| DMA for DAC | NaN  | (DMA) |
 |sampleSound| 12.9 | (interrupt) |
 
 As `scanKeysTask` runs with a much higher frequency, it is assigned with a higher priority number compared to `updateLCD`. 
@@ -90,9 +90,9 @@ Data corresponding to each knob are printed on a specific coordinate on the disp
 
 ### sampleSound (interrupt)
 
-This function is called by an interrupt whenever the DAC DMA has finished reading through either the first or second half of the `steps` array. As `steps` is 600 elements long and the DMA usually operates at 22 kHz, the function will usually be called every 13.6 ms. However, as using the joystick to change the pitch of the DMA changes the frequency of the DMA, the initiation interval can theoretically be as low as 12.9 ms.
+The `sampleSound` function uses the state of keys and knobes to calculate which values the DAC DMA should write to the DAC in order to produce the desired sounds. This information is then stored in the `steps` array which the DAC DMA reads from.
 
-It reads the state of the keys and knobs and produce the corresponding sound wave. The sound wave information is written into the `steps` array, which will be read by the DAC DMA. 
+This function is called by an interrupt whenever the DAC DMA has finished reading through either the first or second half of the `steps` array. As `steps` is 600 elements long and the DMA usually operates at 22 kHz, the function will usually be called every 13.6 ms. However, as using the joystick to change the pitch of a notes changes the frequency of the DMA, the initiation interval can therefore theoretically be as low as 12.9 ms.
 
 ### DMA for DAC (speaker)
 
