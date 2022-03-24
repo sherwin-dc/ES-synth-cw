@@ -151,6 +151,11 @@ A reverb (.i.e echo) setting has been implemented for the synth. There are 8 sel
 
 ### External recording
 
+A recording of the sound can be taken which is transmitted to a python script and saved as a WAV file. Ensure that the correct port (eg `COM5` , `/dev/ttyUSB0` etc) is used in the script and the port is free.
+
+https://user-images.githubusercontent.com/59867245/159928676-91e2b35d-6b7a-4b5b-9cfe-44a8f511da63.mp4
+
+
 ### Class for knobs
 
 A class for the knobs `Knob` is implemented. It is initilaised with a pointer to the coressponding shared data (`volume`, `octave`, `sound`, `reverb`). The method `update` reads in the old state and new state of the knob and writes the rotation variable to the address of the pointer.
