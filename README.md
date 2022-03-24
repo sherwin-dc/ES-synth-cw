@@ -1,32 +1,30 @@
 # Documentation of Music Synthesiser
 
 ## Table of Contents
-- [Documentation of Music Synthesiser](#documentation-of-music-synthesiser)
-  - [Table of Contents](#table-of-contents)
-  - [Demonstration Video](#demonstration-video)
-  - [Tasks Performed by System](#tasks-performed-by-system)
-    - [scanKeysTask](#scankeystask)
-    - [updateLCD](#updatelcd)
-    - [sampleSound](#samplesound)
-    - [DMA for DAC (speaker)](#dma-for-dac-speaker)
-    - [DMA for ADC (joystick)](#dma-for-adc-joystick)
-  - [Critical Instant Analysis of Scheduler](#critical-instant-analysis-of-scheduler)
-  - [Quantification of Total CPU Utilisation](#quantification-of-total-cpu-utilisation)
-  - [Shared Data Structures](#shared-data-structures)
-    - [playedNotes](#playednotes)
-    - [volume, octave, sound, and reverb](#volume-octave-sound-and-reverb)
-    - [joystick](#joystick)
-    - [steps](#steps)
-    - [Queues (Is this what CAN uses? Does CAN use semaphores?)](#queues-is-this-what-can-uses-does-can-use-semaphores)
-  - [Analysis of Inter-task Blocking Dependencies](#analysis-of-inter-task-blocking-dependencies)
-  - [Advanced Features](#advanced-features)
-    - [Polyphony](#polyphony)
-    - [Additional Synth Sound Profiles](#additional-synth-sound-profiles)
-    - [Reverb](#reverb)
-    - [Pitch](#pitch)
-    - [Modulation](#modulation)
-    - [External recording](#external-recording)
-    - [Class for knobs](#class-for-knobs)
+- [Demonstration Video](#demonstration-video)
+- [Tasks Performed by System](#tasks-performed-by-system)
+  - [scanKeysTask](#scankeystask)
+  - [updateLCD](#updatelcd)
+  - [sampleSound](#samplesound)
+  - [DMA for DAC (speaker)](#dma-for-dac-speaker)
+  - [DMA for ADC (joystick)](#dma-for-adc-joystick)
+- [Critical Instant Analysis of Scheduler](#critical-instant-analysis-of-scheduler)
+- [Quantification of Total CPU Utilisation](#quantification-of-total-cpu-utilisation)
+- [Shared Data Structures](#shared-data-structures)
+  - [playedNotes](#playednotes)
+  - [volume, octave, sound, and reverb](#volume-octave-sound-and-reverb)
+  - [joystick](#joystick)
+  - [steps](#steps)
+  - [Queues (Is this what CAN uses? Does CAN use semaphores?)](#queues-is-this-what-can-uses-does-can-use-semaphores)
+- [Analysis of Inter-task Blocking Dependencies](#analysis-of-inter-task-blocking-dependencies)
+- [Advanced Features](#advanced-features)
+  - [Polyphony](#polyphony)
+  - [Additional Synth Sound Profiles](#additional-synth-sound-profiles)
+  - [Reverb](#reverb)
+  - [Pitch](#pitch)
+  - [Modulation](#modulation)
+  - [External recording](#external-recording)
+  - [Class for knobs](#class-for-knobs)
 
 
 ## Demonstration Video
@@ -99,11 +97,11 @@ To read both of the axis of the joystick, the ADC is configured to dual channel 
 
 Information about which keys on the piano are being pressed is stored in a 108 element uint8_t array called `playedNotes`. Though there are only 12 keys on each synthesizer, the `playedNotes` array is 108 elements long to make connecting multiple synthesizers together easier. The array elements give the states of each note in consecutive order from the deepest note to the highest note, starting with C0 at index 0 and going up to B8 at index 107. A zero entry means that the note is not being played a non-zero entry means that the note is being played.
 
-The `playedNotes` array is accessed by the functions `sampleSound()`, `scanKeysTask()`, `Knob::update()`, `updateLCD()` and `decodeCANMessages()`. To ensure synchronisation between tasks, the array has been declared using the keyword `volatile` which means that the variable will be accessed from memory, rather than from local registers, each time it is used. To guarantee safe access between threads the elements in the `playedNotes` array are always accessed using atomic operations. Specifically, we use the functions `__atomic_load_n()` and `__atomic_store_n()`.
+The `playedNotes` array is accessed by the functions `sampleSound()`, `scanKeysTask()`, `Knob::update()`, `updateLCD()` and (`decodeCANMessages()`). To ensure synchronisation between tasks, the array has been declared using the keyword `volatile` which means that the variable will be accessed from memory, rather than from local registers, each time it is used. To guarantee safe access between threads the elements in the `playedNotes` array are always accessed using atomic operations. Specifically, we use the functions `__atomic_load_n()` and `__atomic_store_n()`.
 
 ### volume, octave, sound, and reverb
 
-`volume`, `octave`, `sound` and `reverb` are uint8_t variables which store the volume, octave level, sound profile and amount of reverb of the synthesizer. These variables are accessed by the functions `sampleSound`, `updateLCD()`, `Knob::update()` and `CAN_TX()????`. To ensure synchronisation between tasks, each of the variables have been declared using the keyword `volatile` which means that the variable will be accessed from memory, rather than from local registers, each time it is used. To guarantee safe access between threads the variables are always accessed using atomic operations, through the functions `__atomic_load_n()` and `__atomic_store_n()`.
+`volume`, `octave`, `sound` and `reverb` are uint8_t variables which store the volume, octave level, sound profile and amount of reverb of the synthesizer. These variables are accessed by the functions `sampleSound`, `updateLCD()`, `Knob::update()` and `decodeCANMessages()`. To ensure synchronisation between tasks, each of the variables have been declared using the keyword `volatile` which means that the variable will be accessed from memory, rather than from local registers, each time it is used. To guarantee safe access between threads the variables are always accessed using atomic operations, through the functions `__atomic_load_n()` and `__atomic_store_n()`.
 
 ### joystick
 
@@ -112,6 +110,10 @@ The `playedNotes` array is accessed by the functions `sampleSound()`, `scanKeysT
 ### steps
 
 `steps` is a 600 element uint32_t array found in sawtooth.cpp. The array is accessed both by the `sampleSound()` function and a DMA which writes the values stored in the array to the DAC. As `sampleSound()` only writes to and never reads `steps` it is not necessary to declare the array as volatile. To guarantee safe access to the array the `sampleSound()` function and the DMA never operate on data in the same half of the array. Whenever the DMA reads the middle element of the `steps` array it triggers an interrupt which calls `sampleSound()` which then updates the first half of the array. Likewise, when the DMA reads the last element of the `steps` array, an interrupt is triggered which causes *sampleSound()* to update the second half of the `steps` array. This way, the `sampleSound()` function never updates elements in the part of the array which is currently being read by the DMA.
+
+### isMaster
+
+`isMaster`is a uint8_t variable which is set to a non-zero value when a synth is to be a receiever module and set to zero when a synth is to be a sender module. The variable is accessed by the functions `CAN_RX_ISR()`, `detectKeyPress()`, `scanKeysTask()`, `update_lcd()`, and `sampleSound()`. To ensure synchronisation between tasks, each of the variables have been declared using the keyword `volatile`. To ensure thread safe access, the variable is always accessed using atomic operations.
 
 ### Queues (Is this what CAN uses? Does CAN use semaphores?)
 
@@ -139,18 +141,18 @@ The *Laser* sound profile is similar to the chorus sound profile, but now every 
 
 4. #### Sine
 
-In the *Sine* sound profile the sawtooth waveforms have been replace by sine waves. Different frequency sine waves are produces by looping through an array, which holds one period of a sine wave, at different frequencies.
+In the *Sine* sound profile the sawtooth waveforms have been replace by sine waves. Different frequency sine waves are produces by looping through an array, which holds one period of a sine wave, at different speeds. The produced sound is far softer than that produced by any of the other sound profiles.
 
 ### Reverb
 
-### Pitch
+A reverb (.i.e echo) setting has been implemented for the synth. There are 8 selectable levels of reverb where level 0 corresponds to no reverb and 7 corresponds to a lot of reverb. Reverb is implemented through the FIFO `reverbArray` which stores the values which have previously been written to the DAC. Then every time `sampleSound()` calculates new values to write to the DAC, the values stored in the FIFO are scaled proportional to the `reverb` variable and added to the array calculated by `sampleSound()`. The values added from the FIFO are delayed by ~136 ms, which emulates a room of approximately 50 meters across.
 
-### Modulation
+### Pitch
 
 ### External recording
 
 ### Class for knobs
 
-A class for the knobs (`Knob`) is implemented. It is initilaised with a pointer to the coressponding shared data (`volume`, `octave`, `sound`, `reverb`). The method `update` reads in the old state and new state of the knob and writes the rotation variable to the address of the pointer.
+A class for the knobs `Knob` is implemented. It is initilaised with a pointer to the coressponding shared data (`volume`, `octave`, `sound`, `reverb`). The method `update` reads in the old state and new state of the knob and writes the rotation variable to the address of the pointer.
 
 Such implementation gives a cleaner code in the `scanKeysTask` task. This can also support future extension such as switching functionality *(?)* in each knob, which can be easily implemented by changing the child pointer in the class.
