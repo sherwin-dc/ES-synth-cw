@@ -149,6 +149,8 @@ A reverb (.i.e echo) setting has been implemented for the synth. There are 8 sel
 
 ### Pitch
 
+The joystick on the synth can be used to change the pitch of a notes. Moving the joystick up or down will cause the DMA which reads data to the DAC to speed up or slow down by up to 5.94 %, thereby making the notes being played lighter or deeper by up to one full note. 
+
 ### External recording
 
 A recording of the sound can be taken which is transmitted to a python script and saved as a WAV file. Ensure that the correct port (eg `COM5` , `/dev/ttyUSB0` etc) is used in the script and the port is free.
@@ -158,6 +160,6 @@ https://user-images.githubusercontent.com/59867245/159928676-91e2b35d-6b7a-4b5b-
 
 ### Class for knobs
 
-A class for the knobs `Knob` is implemented. It is initilaised with a pointer to the coressponding shared data (`volume`, `octave`, `sound`, `reverb`). The method `update` reads in the old state and new state of the knob and writes the rotation variable to the address of the pointer.
+A class for the knobs `Knob` is implemented. It is initilaised with a pointer to the corresponding shared data (`volume`, `octave`, `sound`, `reverb`). The method `update` reads in the old state and new state of the knob and writes the rotation variable to the address of the pointer.
 
-Such implementation gives a cleaner code in the `scanKeysTask` task. This can also support future extension such as switching functionality *(?)* in each knob, which can be easily implemented by changing the child pointer in the class.
+Such implementation gives a cleaner code in the `scanKeysTask` task. This can also support future extension such as switching functionality of each knob simpy by changing the child pointer in the class.
