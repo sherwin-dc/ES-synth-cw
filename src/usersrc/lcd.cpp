@@ -283,10 +283,6 @@ void update_lcd(void * params) {
         redraw_lcd(false);
       }
     }
-    
-
-    // Print out CAN Rx Buffer
-    // u8g2_DrawStr(&u8g2, 70, 7, (char *)RX_Message);
 
     // Send the buffer to the LCD
     u8g2_SendBuffer(&u8g2);
