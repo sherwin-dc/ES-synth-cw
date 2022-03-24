@@ -156,7 +156,7 @@ void CAN_RX_ISR() {
   uint8_t RX_Message_ISR[8];
   uint32_t ID;
   uint32_t rx_res = CAN_RX(&ID, RX_Message_ISR);
-  if (isMaster){
+  if (__atomic_load_n(&isMaster, __ATOMIC_RELAXED)){
     xQueueSendFromISR(msgInQ, RX_Message_ISR, NULL);
   }
 }
