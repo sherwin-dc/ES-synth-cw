@@ -153,7 +153,7 @@ The joystick on the synth can be used to change the pitch of a notes. Moving the
 
 ### External recording
 
-A recording of the sound can be taken which is transmitted to a python script and saved as a WAV file. Ensure that the correct port (eg `COM5` , `/dev/ttyUSB0` etc) is used in the script and the port is free.
+A recording of the sound can be taken which is transmitted to a python script and saved as a WAV file. Ensure that the correct port (eg `COM5` , `/dev/ttyUSB0` etc) is used in the script and the port is free. Recordings are started by pressing the second knob from the right and stopped by pression the rightmost knob.
 
 https://user-images.githubusercontent.com/59867245/159928676-91e2b35d-6b7a-4b5b-9cfe-44a8f511da63.mp4
 
