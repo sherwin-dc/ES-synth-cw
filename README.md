@@ -107,6 +107,8 @@ If the module is
 
 ## Shared Data Structures
 
+All of the shared data structures in the system, except the CAN queues, are at one point or another accessed in functions triggered by interrupts. As mutexes cannot be locked within interrupts, the use of mutexes has generally been avoided in our code. Instead, variables have been protected by making use of atomic operations. 
+
 ### playedNotes
 
 Information about which keys on the piano are being pressed is stored in a 108 element uint8_t array called `playedNotes`. Though there are only 12 keys on each synthesizer, the `playedNotes` array is 108 elements long to make connecting multiple synthesizers together easier. The array elements give the states of each note in consecutive order from the deepest note to the highest note, starting with C0 at index 0 and going up to B8 at index 107. A zero entry means that the note is not being played a non-zero entry means that the note is being played.
