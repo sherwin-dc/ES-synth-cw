@@ -1,30 +1,34 @@
 # Documentation of Music Synthesiser
 
 ## Table of Contents
-- [Demonstration Video](#demonstration-video)
-- [Tasks Performed by System](#tasks-performed-by-system)
-  - [scanKeysTask](#scankeystask)
-  - [updateLCD](#updatelcd)
-  - [sampleSound](#samplesound)
-  - [DMA for DAC (speaker)](#dma-for-dac-speaker)
-  - [DMA for ADC (joystick)](#dma-for-adc-joystick)
-- [Critical Instant Analysis of Scheduler](#critical-instant-analysis-of-scheduler)
-- [Quantification of Total CPU Utilisation](#quantification-of-total-cpu-utilisation)
-- [Shared Data Structures](#shared-data-structures)
-  - [playedNotes](#playednotes)
-  - [volume, octave, sound, and reverb](#volume-octave-sound-and-reverb)
-  - [joystick](#joystick)
-  - [steps](#steps)
-  - [Queues (Is this what CAN uses? Does CAN use semaphores?)](#queues-is-this-what-can-uses-does-can-use-semaphores)
-- [Analysis of Inter-task Blocking Dependencies](#analysis-of-inter-task-blocking-dependencies)
-- [Advanced Features](#advanced-features)
-  - [Polyphony](#polyphony)
-  - [Additional Synth Sound Profiles](#additional-synth-sound-profiles)
-  - [Reverb](#reverb)
-  - [Pitch](#pitch)
-  - [Modulation](#modulation)
-  - [External recording](#external-recording)
-  - [Class for knobs](#class-for-knobs)
+- [Documentation of Music Synthesiser](#documentation-of-music-synthesiser)
+  - [Table of Contents](#table-of-contents)
+  - [Demonstration Video](#demonstration-video)
+  - [Tasks Performed by System](#tasks-performed-by-system)
+    - [Reading keypresses](#reading-keypresses)
+    - [Updating display](#updating-display)
+    - [sampleSound](#samplesound)
+    - [DMA for DAC (speaker)](#dma-for-dac-speaker)
+    - [DMA for ADC (joystick)](#dma-for-adc-joystick)
+    - [Handling CAN messages](#handling-can-messages)
+  - [Critical Instant Analysis of Scheduler](#critical-instant-analysis-of-scheduler)
+  - [Quantification of Total CPU Utilisation](#quantification-of-total-cpu-utilisation)
+  - [Shared Data Structures](#shared-data-structures)
+    - [playedNotes](#playednotes)
+    - [volume, octave, sound, and reverb](#volume-octave-sound-and-reverb)
+    - [joystick](#joystick)
+    - [steps](#steps)
+    - [isMaster](#ismaster)
+    - [msgInQ](#msginq)
+    - [msgOutQ](#msgoutq)
+  - [Analysis of Inter-task Blocking Dependencies](#analysis-of-inter-task-blocking-dependencies)
+  - [Advanced Features](#advanced-features)
+    - [Polyphony](#polyphony)
+    - [Additional Synth Sound Profiles](#additional-synth-sound-profiles)
+    - [Reverb](#reverb)
+    - [Pitch](#pitch)
+    - [External recording](#external-recording)
+    - [Class for knobs](#class-for-knobs)
 
 
 ## Demonstration Video
@@ -33,12 +37,12 @@ The following video showcases the functionality of the music synthesizer and hig
 
 *insert video*
 
-STMCube is used instead of STMduino framework to exploit functionality of the stm32 board such as DMA. HAL functions are called directly.
+STMCube is used instead of STM32duino framework to exploit the functionality of the STM32 board such as DMA as well as reading ADC values with 12-bit resolution. HAL functions are called directly.
 
 ## Tasks Performed by System
 *talk about freeRTOS*
 
-DMA allows direct read/write to the memory. Some tasks were decided to implement using the DMA to reduce the load of the processor, as it was observed that the processor does not have sufficient capacity to deal with *too much high intesive tasks*. DMA is connected to the DAC and ADC directly to read and write from the analog pins on the MCU.
+DMA allows direct read/write to the memory. Some tasks were implemented using the DMA to reduce the load of the processor, as it was observed that the processor does not have sufficient capacity to deal with *too much high intesive tasks*. DMA is connected to the DAC and ADC directly to read and write from the analog pins on the MCU.
 
 Below table shows an overview of the tasks that are performed and their corresponding sample rate and priority number. Lower priority numbers denote low priority tasks. (src: https://www.freertos.org/RTOS-task-priority.html)
 
@@ -47,14 +51,17 @@ Below table shows an overview of the tasks that are performed and their correspo
 | scanKeysTask | 20 | 7 |
 | updateLCD | 100 | 1 |
 | DMA for ADC | 45.45 ± 5% | (DMA) |
+| decodeCANMessages | *?* | 3 |
+| transmitCANMessages | *?* | 4 |
+*will it work if we set priority for decode->2, transmit->3, and scanKeys->4?*
 
-As `scanKeysTask` runs with a much higher frequency, it is assigned with a higher priority number compared to `updateLCD`. The DMA for ADC has a variable sample rate which is implemented for pitch bend. Please refer to *section* for implementation details.
+As `scanKeysTask` runs with a much higher frequency, it is assigned with a higher priority number compared to `updateLCD`. The DMA for ADC has a variable sample rate which is implemented for pitch bend. Please refer [here](#scankeystask) for implementation details.
 
-### scanKeysTask
+### Reading keypresses
 
-The task reads the GPIO digital pins (C0 - C3) and determine the state of the keys and knobs on the module. It also writes to the GPIO pins (RA0 - RA2) which allow different "rows" to be read from the key matrix. It also decodes the rotation of the knob by a state transition table. The task is ran with 20ms sample rate such that transient states of the knobs can be captured in most use case.
+The `scanKeysTask` task reads the GPIO digital pins (C0 - C3) and determine the state of the keys and knobs on the module. It also writes to the GPIO pins (RA0 - RA2) which allow different "rows" to be read from the key matrix. It also decodes the rotation of the knob by a state transition table. The task is ran with 20ms sample rate such that transient states of the knobs can be captured in most use cases.
 
-As state `01` and `10` of the knob are between detents of the knobs, it is assumed that the next state must be the next detent in the same rotation direction. Hence the transition table below is adopted instead of that stated in the lab instruction. With such transition table, the corresponding data is only increment or decrement by one for ever detent. Although transitions cannot be correctly detected when the knobs are rotated fastly, it was decided that it is sufficient for majority of time.
+As state `01` and `10` of the knob are between detents of the knobs, it is assumed that the next state must be the next detent in the same rotation direction. Hence the transition table below is adopted instead of that stated in the lab instruction. With such transition table, the corresponding data is only increment or decrement by one for every detent. Although transitions cannot be correctly detected when the knobs are rotated quickly, it was decided that it is sufficient most of the time.
 
 | Previous {B,A} | Current {B,A} | Rotation Variable |
 | --- | --- | --- |
@@ -63,21 +70,26 @@ As state `01` and `10` of the knob are between detents of the knobs, it is assum
 | 11 | 01 | +1 |
 | 11 | 10 | -1 |
 
-The keys that are pressed and the rotation variable of the knobs are updated and stored in a shared data structure.
+The keys that are pressed and the rotation variable of the knobs are updated and stored in a shared data structure, ``.
+*is this true?*
 
-*TODO: CAN bus*
+The keyboard can be configured to be a CAN "sender" or "reciever" by pressing the first and second knobs from the left of the keyboard, respectively.
 
-### updateLCD
+Lastly, the task compares the current and previous state of the keyboard using a static variable to track notes have been pressed or released. This is then used to send CAN messages, if the keyboard module is configured as a sender.
 
-The task reads the state of the keys, knobs and joystick from the shared datas and displays it on the OLED display. It is ran with a sample rate of 100ms such that the OLED refreshes at the same rate as specified in the specification. 
+### Updating display
 
-Data corresponding to each knob are printed on a specific coordinate on the display such that they are displayed on top fo the knob.
+The task reads the state of the keys, knobs and joystick from the shared data structures and displays it on the OLED display. It is ran with a sample rate of 100ms such that the OLED refreshes at the same rate as specified in the specification. 
+
+*Maybe want to talk about how we used custom icons for the display instead of just text?*
+
+Data corresponding to each knob are printed on a specific coordinate on the display such that they are displayed on top of the knobs for intuitive operation.
 
 *insert image*
 
 ### sampleSound
 
-The function is called as an iterrupt. It reads the state of the keys and *features* and produce the corresponding sound wave. *writes into the array*
+The function is called as an interrupt. It reads the state of the keys and *features* and produce the corresponding sound wave. *writes into the array*
 
 ### DMA for DAC (speaker)
 
@@ -85,7 +97,9 @@ The function is called as an iterrupt. It reads the state of the keys and *featu
 
 To read both of the axis of the joystick, the ADC is configured to dual channel (scan) conversion mode. It reads the two channels (A0, A1) in one read and writes to the shared data in the memory via DMA.
 
+### Handling CAN messages
 
+If the module is 
 
 ## Critical Instant Analysis of Scheduler
 ## Quantification of Total CPU Utilisation
@@ -115,8 +129,16 @@ The `playedNotes` array is accessed by the functions `sampleSound()`, `scanKeysT
 
 `isMaster`is a uint8_t variable which is set to a non-zero value when a synth is to be a receiever module and set to zero when a synth is to be a sender module. The variable is accessed by the functions `CAN_RX_ISR()`, `detectKeyPress()`, `scanKeysTask()`, `update_lcd()`, and `sampleSound()`. To ensure synchronisation between tasks, each of the variables have been declared using the keyword `volatile`. To ensure thread safe access, the variable is always accessed using atomic operations.
 
-### Queues (Is this what CAN uses? Does CAN use semaphores?)
+### msgInQ
 
+Incoming CAN messages are recieved in the `CAN_RX_ISR()` ISR and processed in the `decodeCANMesssages()` task. Thread safety is achieved with `msgInQ`, a FreeRTOS queue. It holds 36 8-byte values corresponding to an 8-byte CAN message.
+`CAN_RX_ISR()` writes to `msgInQ` using `xQueueSendFromISR`, and `decodeCANMessages()` reads from `msgInQ` using `xQueueReceive`.
+
+### msgOutQ
+
+Outgoing CAN messages are generated when the state of each key is 
+ `CAN_RX_ISR()` ISR and processed in the `decodeCANMesssages()` task. Thread safety is achieved with `msgInQ`, a FreeRTOS queue. It holds 36 8-byte values corresponding to an 8-byte CAN message.
+`CAN_RX_ISR()` writes to `msgInQ` using `xQueueSendFromISR`, and `decodeCANMessages()` reads from `msgInQ` using `xQueueReceive`.
 
 ## Analysis of Inter-task Blocking Dependencies
 ## Advanced Features
