@@ -12,13 +12,8 @@
 #include "lcd.h"
 #include <stdio.h>
 
-
 #include <cstring> // Contains the memcpy function
 #include <algorithm> // Contains max and min functions
-
-//Overwrite the weak default IRQ Handlers and callabcks
-// extern "C" void CAN1_RX0_IRQHandler(void);
-// extern "C" void CAN1_TX_IRQHandler(void);
 
 #ifdef __cplusplus
 extern "C" {
@@ -102,10 +97,6 @@ uint32_t CAN_RegisterRX_ISR(void(*callback)()) {
   //Enable message received interrupt in HAL
   uint32_t status = (uint32_t) HAL_CAN_ActivateNotification (&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING);
 
-  //Switch on the interrupt
-//   HAL_NVIC_SetPriority (CAN1_RX0_IRQn, 5, 0);
-//   HAL_NVIC_EnableIRQ (CAN1_RX0_IRQn);
-
   return status;
 }
 
@@ -115,10 +106,6 @@ uint32_t CAN_RegisterTX_ISR(void(*callback)()) {
 
   //Enable message received interrupt in HAL
   uint32_t status = (uint32_t) HAL_CAN_ActivateNotification (&hcan1, CAN_IT_TX_MAILBOX_EMPTY);
-
-  //Switch on the interrupt
-//   HAL_NVIC_SetPriority (CAN1_TX_IRQn, 5, 0);
-//   HAL_NVIC_EnableIRQ (CAN1_TX_IRQn);
 
   return status;
 }

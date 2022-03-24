@@ -185,16 +185,10 @@ extern "C" void sampleSound(uint8_t region){
     max = tmpSteps[i] > max ? tmpSteps[i] : max;
     
   }
-  
-
-  // print((max - min));
-
 
   if(__atomic_load_n(&isMaster, __ATOMIC_RELAXED)){ // If module is master play sound
     // Copy array to memory used by DMA 
     std::copy(tmpSteps, tmpSteps + 300, steps + region*300);
-  
-
 
     if(__atomic_load_n(&isRecording, __ATOMIC_RELAXED)) {
 

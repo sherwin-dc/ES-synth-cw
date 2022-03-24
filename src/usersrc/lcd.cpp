@@ -5,7 +5,7 @@
 #include <vector>
 
 u8g2_t u8g2;
- QueueHandle_t lcdQueue;
+QueueHandle_t lcdQueue;
 
 uint8_t u8x8_byte_hw_i2c(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *arg_ptr) {
   static uint8_t buffer[32];		/* u8g2/u8x8 will never send more than 32 bytes between START_TRANSFER and END_TRANSFER */
@@ -131,10 +131,6 @@ void update_lcd(void * params) {
   uint8_t recordingBlinking = 0;
   uint8_t wasMaster = 1;
   while (1) {
-    // START_TIMING
-    // DEBUG_PRINT("1");
-
-
     u8g2_SetFont(&u8g2, u8g2_font_smallsimple_tr); // Set font size
 
     // bitbanged array for all notes
@@ -287,10 +283,8 @@ void update_lcd(void * params) {
     // Send the buffer to the LCD
     u8g2_SendBuffer(&u8g2);
 
-
     // Toggle MCU LED
     HAL_GPIO_TogglePin(GPIOB, LED_BUILTIN_Pin);
-
 
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }
