@@ -33,9 +33,10 @@
 
 ## Demonstration Video
 
-The following video showcases the functionality of the music synthesizer and highlights some of its advanced features.
+The following video showcases the functionality of the music synthesizer and highlights some of its advanced features. Note that a separate video can be found below for the [sound recording](#external-recording) feature.
 
-*insert video*
+
+The video can be found [here](https://imperiallondon-my.sharepoint.com/:v:/g/personal/ejh19_ic_ac_uk/EYxDO2k4VvpGo4vONZREO3gB_bmMcaWnX2-DTccWO1V3EA?e=30DC51)
 
 STM32Cube is used instead of the STM32duino framework to exploit the functionality of the STM32 board such as DMA and reading ADC values with 12-bit resolution. HAL functions are called directly.
 
