@@ -184,7 +184,7 @@ void scanKeysTask(void * params) {
 
 void init_keydetect() {
   DEBUG_PRINT("Initialising Detect Keys");
-  if (xTaskCreate(scanKeysTask, "Detect keys", 512, NULL, 7, NULL) != pdPASS) {
+  if (xTaskCreate(scanKeysTask, "Detect keys", 512, NULL, 4, NULL) != pdPASS) {
     DEBUG_PRINT("ERROR");
     print(xPortGetFreeHeapSize());
   }

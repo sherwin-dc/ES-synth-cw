@@ -177,7 +177,7 @@ void transmitCANMessages(void* params){
 
 void init_can_rx_decode(){
     DEBUG_PRINT("Initializing CAN RX Decode");
-    if (xTaskCreate(decodeCANMessages, "CAN Decoder", 256, NULL, 3, NULL) != pdPASS) {
+    if (xTaskCreate(decodeCANMessages, "CAN Decoder", 256, NULL, 2, NULL) != pdPASS) {
         DEBUG_PRINT("ERROR");
         print(xPortGetFreeHeapSize());
     }
@@ -185,7 +185,7 @@ void init_can_rx_decode(){
 
 void init_can_tx_decode(){
     DEBUG_PRINT("Initializing CAN TX Decode");
-    if (xTaskCreate(transmitCANMessages, "CAN Transmitter", 256, NULL, 4, NULL) != pdPASS) {
+    if (xTaskCreate(transmitCANMessages, "CAN Transmitter", 256, NULL, 3, NULL) != pdPASS) {
         DEBUG_PRINT("ERROR");
         print(xPortGetFreeHeapSize());
     }
