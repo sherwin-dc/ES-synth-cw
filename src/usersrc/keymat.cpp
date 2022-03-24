@@ -108,7 +108,7 @@ void detectKeyPress(boardkeys_t newKeys) {
                   //! This queue seems to block indefinitely sometimes
                   //! because transmitCANMessages does not seem to be running
                   // DEBUG_PRINT("TX CAN MSG");
-                  if (isMaster==0){
+                  if (__atomic_load_n(&isMaster, __ATOMIC_RELAXED)==0){
                         xQueueSend(msgOutQ, TX_Message, portMAX_DELAY);
                   }
             } 
