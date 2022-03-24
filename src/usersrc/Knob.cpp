@@ -1,6 +1,9 @@
 #include "Knob.hpp"
 #include "main.h"
 #include <algorithm>
+#include <map>
+
+std::map<volatile uint8_t*, int> paramMax { {&octave, 8}, {&volume, 7}, {&sound, 4}, {&reverb, 7} };
 
 Knob::Knob() {
     target = nullptr;
@@ -26,7 +29,7 @@ void Knob::update(uint8_t oldState, uint8_t newState) {
 
     // update parameters
     int param = int(__atomic_load_n(target,__ATOMIC_RELAXED)) + delta;
-    param = std::min(std::max(param, 0), 7);
+    param = std::min(std::max(param, 0), (paramMax[target]));
     __atomic_store_n(target,param,__ATOMIC_RELAXED);
 
     // only for when target==octave (better way to handle this?)

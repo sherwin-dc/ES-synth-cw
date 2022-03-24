@@ -22,7 +22,7 @@ uint8_t u8x8_gpio_and_delay(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *ar
 void update_lcd(void * params);
 void init_lcd();
 void start_lcd_thread();
-
+void redraw_lcd(bool master);
 
 
 #define W_KEY_WIDTH 11
