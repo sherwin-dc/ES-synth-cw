@@ -133,25 +133,8 @@ void update_lcd(void * params) {
     // START_TIMING
     // DEBUG_PRINT("1");
 
-    u8g2_ClearBuffer(&u8g2); // Clear content on screen
+    // u8g2_ClearBuffer(&u8g2); // Clear content on screen
     u8g2_SetFont(&u8g2, u8g2_font_smallsimple_tr); // Set font size
-
-    u8g2_SetDrawColor(&u8g2, 2);
-    // draw white keys
-    DRAW_WHITE_KEY(0);
-    DRAW_WHITE_KEY(1);
-    DRAW_WHITE_KEY(2);
-    DRAW_WHITE_KEY(3);
-    DRAW_WHITE_KEY(4);
-    DRAW_WHITE_KEY(5);
-    DRAW_WHITE_KEY(6);
-
-    // draw black keys
-    DRAW_BLACK_KEY(0);
-    DRAW_BLACK_KEY(1);
-    DRAW_BLACK_KEY(3);
-    DRAW_BLACK_KEY(4);
-    DRAW_BLACK_KEY(5);
 
     // bitbanged array for all notes
     uint16_t pianoKeys[12] = {0};
@@ -320,22 +303,22 @@ void init_lcd() {
   u8g2_SetPowerSave(&u8g2, 0); // wake up display*/
 
   u8g2_ClearBuffer(&u8g2);
-  // u8g2_SetDrawColor(&u8g2, 2);
-  // // draw white keys
-  // DRAW_WHITE_KEY(0);
-  // DRAW_WHITE_KEY(1);
-  // DRAW_WHITE_KEY(2);
-  // DRAW_WHITE_KEY(3);
-  // DRAW_WHITE_KEY(4);
-  // DRAW_WHITE_KEY(5);
-  // DRAW_WHITE_KEY(6);
+  u8g2_SetDrawColor(&u8g2, 2);
+  // draw white keys
+  DRAW_WHITE_KEY(0);
+  DRAW_WHITE_KEY(1);
+  DRAW_WHITE_KEY(2);
+  DRAW_WHITE_KEY(3);
+  DRAW_WHITE_KEY(4);
+  DRAW_WHITE_KEY(5);
+  DRAW_WHITE_KEY(6);
 
-  // // draw black keys
-  // DRAW_BLACK_KEY(0);
-  // DRAW_BLACK_KEY(1);
-  // DRAW_BLACK_KEY(3);
-  // DRAW_BLACK_KEY(4);
-  // DRAW_BLACK_KEY(5);
+  // draw black keys
+  DRAW_BLACK_KEY(0);
+  DRAW_BLACK_KEY(1);
+  DRAW_BLACK_KEY(3);
+  DRAW_BLACK_KEY(4);
+  DRAW_BLACK_KEY(5);
 
 
   u8g2_SetDrawColor(&u8g2, 1);
