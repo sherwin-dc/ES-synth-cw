@@ -151,14 +151,14 @@ void scanKeysTask(void * params) {
 
             // Update isMaster
             // Knob 0 S
-            if (!keyPressed[24] && isMaster==1)   {
+            if (!keyPressed[24] && __atomic_load_n(&isMaster, __ATOMIC_RELAXED)==1)   {
                   __atomic_store_n(&isMaster, 0, __ATOMIC_RELAXED);
                   // if (transmitCANMessage_handle!=NULL) vTaskSuspend(*transmitCANMessage_handle);
                   // if (decodeCANMessage_handle!=NULL) vTaskResume(*decodeCANMessage_handle);
                   DEBUG_PRINT("Res decode");
             }
             // Knob 1 S
-            if (!keyPressed[25] && isMaster==0) {
+            if (!keyPressed[25] && __atomic_load_n(&isMaster, __ATOMIC_RELAXED)==0) {
                   __atomic_store_n(&isMaster, 1, __ATOMIC_RELAXED);
                   // if (decodeCANMessage_handle!=NULL) vTaskSuspend(*decodeCANMessage_handle);
                   // if (transmitCANMessage_handle!=NULL) vTaskResume(*transmitCANMessage_handle);
