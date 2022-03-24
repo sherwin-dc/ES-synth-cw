@@ -12,14 +12,14 @@ try:
   
   recording = recording[0:-10]
   print(ExpectedSamples)
-  print(len(recording)/550)
+  print(len(recording)/600)
 
-  correctedSampleRate = 22000 / ( ExpectedSamples / ( len(recording) / 550 ))
+  correctedSampleRate = 22000 / ( ExpectedSamples / ( len(recording) / 600 ))
 
 
   wavfile = wave.open("rec.wav", 'w')
   wavfile.setnchannels(1)
-  wavfile.setsampwidth(1)
+  wavfile.setsampwidth(2)
   wavfile.setframerate(correctedSampleRate)
   wavfile.writeframesraw(recording)
   wavfile.close()
