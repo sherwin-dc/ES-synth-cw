@@ -61,15 +61,8 @@ extern QueueHandle_t msgInQ;
 extern QueueHandle_t msgOutQ;
 extern SemaphoreHandle_t CAN_TX_Semaphore;
 
-// CAN recieve buffer
-extern uint8_t RX_Message[8];
-
 // Configures if it's a CAN reciever or sender
 extern volatile uint8_t isMaster;
-
-// Task handles for various tasks
-extern TaskHandle_t* decodeCANMessage_handle;
-extern TaskHandle_t* transmitCANMessage_handle;
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/

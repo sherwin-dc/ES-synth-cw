@@ -5,7 +5,7 @@
 #include <vector>
 
 u8g2_t u8g2;
- QueueHandle_t lcdQueue;
+QueueHandle_t lcdQueue;
 
 uint8_t u8x8_byte_hw_i2c(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *arg_ptr) {
   static uint8_t buffer[32];		/* u8g2/u8x8 will never send more than 32 bytes between START_TRANSFER and END_TRANSFER */
@@ -129,20 +129,18 @@ void update_lcd(void * params) {
   std::vector<std::string> notes = {"C","C#","D","D#","E","F","F#","G","G#","A","A#","B"};
   std::vector<std::string> sounds = {"SAW   ","POLY  ","CHORUS","LASER ","SINE  ","5     ","6     ","7     ","8     ","9     "};
   uint8_t recordingBlinking = 0;
+  uint8_t wasMaster = 1;
   while (1) {
-    // START_TIMING
-    // DEBUG_PRINT("1");
-
-    // u8g2_ClearBuffer(&u8g2); // Clear content on screen
     u8g2_SetFont(&u8g2, u8g2_font_smallsimple_tr); // Set font size
 
     // bitbanged array for all notes
     uint16_t pianoKeys[12] = {0};
 
     // collate notes
-    for (int i=0; i<9*12; ++i) {
+    uint8_t tmpOctave = __atomic_load_n(&octave,__ATOMIC_RELAXED);
+    for (int i=12*tmpOctave; i<(12*tmpOctave)+12; ++i) {
       if(__atomic_load_n(&playedNotes[i],__ATOMIC_RELAXED)) {
-        pianoKeys[i%12] |= 1 << (i/12);
+        pianoKeys[i%12] = 1;
       }
     }
 
@@ -224,6 +222,12 @@ void update_lcd(void * params) {
 
     uint8_t tmpIsMaster = __atomic_load_n(&isMaster,__ATOMIC_RELAXED);
     if (tmpIsMaster) {
+
+      if (!wasMaster) {
+        wasMaster = 1;
+        redraw_lcd(true);
+      }
+
       // Write out the volume
       char vol [2] = {0};
       vol[0] = __atomic_load_n(&volume,__ATOMIC_RELAXED) + 48;
@@ -253,10 +257,10 @@ void update_lcd(void * params) {
         ++recordingBlinking;
         if (recordingBlinking==5) {
           unsigned char currentlyRecordingIcon[] = {0xff,0x81,0x81,0x81,0x81,0x81,0x81,0xff};
-          u8g2_DrawXBM(&u8g2, 78, 12, 8, 8, currentlyRecordingIcon);
+          u8g2_DrawXBM(&u8g2, 107, 12, 8, 8, currentlyRecordingIcon);
         } else if (recordingBlinking==10) {
           recordingBlinking = 0;
-          u8g2_DrawXBM(&u8g2, 78, 12, 8, 8, recordIcon);
+          u8g2_DrawXBM(&u8g2, 107, 12, 8, 8, recordIcon);
         }
         
         unsigned char stopRecordingIcon[] = {0xff,0x81,0xbd,0xbd,0xbd,0xbd,0x81,0xff};
@@ -267,21 +271,20 @@ void update_lcd(void * params) {
         u8g2_DrawBox(&u8g2, 116, 12, 8, 8);
         u8g2_SetDrawColor(&u8g2, 1);
         
-        u8g2_DrawXBM(&u8g2, 78, 12, 8, 8, recordIcon);
+        u8g2_DrawXBM(&u8g2, 107, 12, 8, 8, recordIcon);
+      }
+    } else {
+      if (wasMaster) {
+        wasMaster = 0;
+        redraw_lcd(false);
       }
     }
-    
-
-    // Print out CAN Rx Buffer
-    // u8g2_DrawStr(&u8g2, 70, 7, (char *)RX_Message);
 
     // Send the buffer to the LCD
     u8g2_SendBuffer(&u8g2);
 
-
     // Toggle MCU LED
     HAL_GPIO_TogglePin(GPIOB, LED_BUILTIN_Pin);
-
 
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }
@@ -301,7 +304,10 @@ void init_lcd() {
 
   u8g2_InitDisplay(&u8g2); // send init sequence to the display, display is in sleep mode after this,
   u8g2_SetPowerSave(&u8g2, 0); // wake up display*/
+  redraw_lcd(true);
+}
 
+void redraw_lcd(bool master) {
   u8g2_ClearBuffer(&u8g2);
   u8g2_SetDrawColor(&u8g2, 2);
   // draw white keys
@@ -323,24 +329,34 @@ void init_lcd() {
 
   u8g2_SetDrawColor(&u8g2, 1);
   u8g2_SetFont(&u8g2, u8g2_font_smallsimple_tr); // Set font size
-  unsigned char volumeIcon[] = {0xd4,0xe6,0xef,0xef,0xe6,0xd4};
-  u8g2_DrawXBM(&u8g2, 2, 26, 6, 6, volumeIcon);
 
   unsigned char musicNoteIcon[] = {0xfc,0xe6,0xe2,0xe2,0xf3,0xf3};
   u8g2_DrawXBM(&u8g2, 42, 26, 6, 6, musicNoteIcon);
 
-  unsigned char waveIcon[] = {0xc4,0xea,0xd1,0xc0,0xf9,0xe7};
-  u8g2_DrawXBM(&u8g2, 72, 26, 6, 6, waveIcon);
+  if (master) {
+  
+    unsigned char volumeIcon[] = {0xd4,0xe6,0xef,0xef,0xe6,0xd4};
+    u8g2_DrawXBM(&u8g2, 2, 26, 6, 6, volumeIcon);
 
-  unsigned char reverbIcon[] = {0xc9,0xd2,0xc9,0xd2,0xc9,0xd2};
-  u8g2_DrawXBM(&u8g2, 112, 26, 6, 6, reverbIcon);
+    unsigned char waveIcon[] = {0xc4,0xea,0xd1,0xc0,0xf9,0xe7};
+    u8g2_DrawXBM(&u8g2, 72, 26, 6, 6, waveIcon);
 
-  unsigned char pitchIcon[] = {0xd5,0xe5,0xe7,0xe2,0xe2,0xd2};
-  u8g2_DrawXBM(&u8g2, 78, 1, 6, 6, pitchIcon);
+    unsigned char reverbIcon[] = {0xc9,0xd2,0xc9,0xd2,0xc9,0xd2};
+    u8g2_DrawXBM(&u8g2, 112, 26, 6, 6, reverbIcon);
 
-  unsigned char modulationIcon[] = {0xca,0xeb,0xff,0xff,0xeb,0xca};
-  u8g2_DrawXBM(&u8g2, 106, 1, 6, 6, modulationIcon);
+    unsigned char pitchIcon[] = {0xd5,0xe5,0xe7,0xe2,0xe2,0xd2};
+    u8g2_DrawXBM(&u8g2, 78, 1, 6, 6, pitchIcon);
 
+    unsigned char modulationIcon[] = {0xca,0xeb,0xff,0xff,0xeb,0xca};
+    u8g2_DrawXBM(&u8g2, 106, 1, 6, 6, modulationIcon);
+
+    unsigned char masterIcon[] = {0xff,0x81,0xa5,0xbd,0xa5,0xa5,0x81,0xff};
+    u8g2_DrawXBM(&u8g2, 78, 12, 8, 8, masterIcon);
+
+  } else {
+    unsigned char slaveIcon[] = {0xff,0xbd,0x85,0xbd,0xa1,0xbd,0x81,0xff};
+    u8g2_DrawXBM(&u8g2, 86, 12, 8, 8, slaveIcon);
+  }
 
 }
 

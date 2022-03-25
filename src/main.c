@@ -69,13 +69,7 @@ QueueHandle_t msgInQ;
 QueueHandle_t msgOutQ;
 SemaphoreHandle_t CAN_TX_Semaphore;
 
-uint8_t RX_Message[8] = {0};
-
 volatile uint8_t isMaster = true;
-
-TaskHandle_t* decodeCANMessage_handle = NULL;
-TaskHandle_t* transmitCANMessage_handle = NULL;
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/

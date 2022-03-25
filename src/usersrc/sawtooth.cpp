@@ -75,7 +75,7 @@ extern "C" void sampleSound(uint8_t region){
 
   uint32_t tmpSteps [300] = {0}; // Array to temporarily hold the values which we write to steps
   int32_t tmpStepsNOFF [300] = {0}; // Array to temporarily hold the same data as steps but centred around 0
-  uint8_t recordingSteps[300] = {0};
+  uint16_t recordingSteps[300] = {0};
 
   // Read in the volume
   uint8_t tmpVolume = __atomic_load_n(&volume,__ATOMIC_RELAXED);
@@ -176,37 +176,44 @@ extern "C" void sampleSound(uint8_t region){
   __HAL_TIM_SET_AUTORELOAD(&htim7, uint32_t((1.0F + 0.0594F*((float(rawPitch>>6) - 32)/64))*3273)); // Set DMA frequency depending on the pitch
 
   // Offset tmpStepsNOFF to create tmpSteps
+  uint32_t max = 0, min = UINT32_MAX;
   for(int i = 0; i <300; i++){
     tmpSteps[i] = uint32_t(tmpStepsNOFF[i] + 2048);
-    recordingSteps[i] = tmpStepsNOFF[i] + 128;
+    recordingSteps[i] = tmpSteps[i];
+
+    min = tmpSteps[i] < min ? tmpSteps[i] : min;
+    max = tmpSteps[i] > max ? tmpSteps[i] : max;
+    
   }
 
   if(__atomic_load_n(&isMaster, __ATOMIC_RELAXED)){ // If module is master play sound
     // Copy array to memory used by DMA 
     std::copy(tmpSteps, tmpSteps + 300, steps + region*300);
-  }else{ // If module is slave do not play sound
+
+    if(__atomic_load_n(&isRecording, __ATOMIC_RELAXED)) {
+
+      // HAL_UART_DMAStop(&hlpuart1);
+      if (wasRecording) {
+        ++wasRecording;
+        HAL_UART_Transmit_DMA(&huart2, (uint8_t *) recordingSteps, 300*2);
+      } else {
+        wasRecording = 1;
+        HAL_UART_Transmit(&huart2, (uint8_t*) "RECSTART", 8, 100);
+        HAL_UART_Transmit_DMA(&huart2, (uint8_t *) recordingSteps, 300*2);
+      }
+    } else {
+      if (wasRecording) {
+        if (HAL_UART_GetState(&huart2) == HAL_UART_STATE_READY) {
+          HAL_UART_Transmit(&huart2, reinterpret_cast<uint8_t*>(&wasRecording), 4, 100);
+          HAL_UART_Transmit(&huart2, (uint8_t*) "RECEND", 6, 100);
+          wasRecording = 0; 
+        }     
+      }
+    }
+
+  } else { // If module is slave do not play sound
     // Copy empty array to memory used by DMA 
     std::copy(emptyArray, emptyArray + 300, steps + region*300);
-  }
-
-
-  if(__atomic_load_n(&isRecording, __ATOMIC_RELAXED)) {
-
-    // HAL_UART_DMAStop(&hlpuart1);
-    if (wasRecording) {
-      ++wasRecording;
-      HAL_UART_Transmit_DMA(&huart2, recordingSteps, 300);
-    } else {
-      wasRecording = 1;
-      HAL_UART_Transmit(&huart2, (uint8_t*) "RECSTART", 8, 100);
-      HAL_UART_Transmit_DMA(&huart2, recordingSteps, 300);
-    }
-  } else {
-    if (wasRecording) {
-      HAL_UART_Transmit(&huart2, reinterpret_cast<uint8_t*>(&wasRecording), 4, 100);
-      HAL_UART_Transmit(&huart2, (uint8_t*) "RECEND", 6, 100);
-      wasRecording = 0; 
-    }
   }
 
 }

@@ -12,13 +12,8 @@
 #include "lcd.h"
 #include <stdio.h>
 
-
 #include <cstring> // Contains the memcpy function
 #include <algorithm> // Contains max and min functions
-
-//Overwrite the weak default IRQ Handlers and callabcks
-// extern "C" void CAN1_RX0_IRQHandler(void);
-// extern "C" void CAN1_TX_IRQHandler(void);
 
 #ifdef __cplusplus
 extern "C" {
@@ -102,10 +97,6 @@ uint32_t CAN_RegisterRX_ISR(void(*callback)()) {
   //Enable message received interrupt in HAL
   uint32_t status = (uint32_t) HAL_CAN_ActivateNotification (&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING);
 
-  //Switch on the interrupt
-//   HAL_NVIC_SetPriority (CAN1_RX0_IRQn, 5, 0);
-//   HAL_NVIC_EnableIRQ (CAN1_RX0_IRQn);
-
   return status;
 }
 
@@ -115,10 +106,6 @@ uint32_t CAN_RegisterTX_ISR(void(*callback)()) {
 
   //Enable message received interrupt in HAL
   uint32_t status = (uint32_t) HAL_CAN_ActivateNotification (&hcan1, CAN_IT_TX_MAILBOX_EMPTY);
-
-  //Switch on the interrupt
-//   HAL_NVIC_SetPriority (CAN1_TX_IRQn, 5, 0);
-//   HAL_NVIC_EnableIRQ (CAN1_TX_IRQn);
 
   return status;
 }
@@ -155,8 +142,8 @@ void CAN_RX_ISR() {
   // Only recieve if we are reciever
   uint8_t RX_Message_ISR[8];
   uint32_t ID;
-  uint32_t rx_res = CAN_RX(&ID, RX_Message_ISR);
-  if (isMaster){
+  CAN_RX(&ID, RX_Message_ISR);
+  if (__atomic_load_n(&isMaster, __ATOMIC_RELAXED)){
     xQueueSendFromISR(msgInQ, RX_Message_ISR, NULL);
   }
 }
@@ -167,48 +154,30 @@ void CAN_TX_ISR(){
 
 // Create a decode thread to handle incoming CAN messages
 void decodeCANMessages(void *params) {
+  // CAN recieve buffer
+  uint8_t RX_Message[8] = {0};
+  
   while(1){
     xQueueReceive(msgInQ, (void*)RX_Message, portMAX_DELAY);
-    print(RX_Message[0]);
-    print(RX_Message[1]);
-    print(RX_Message[2]);
-
     // one octave has 12 notes
     uint8_t playedNotesIdx = RX_Message[2] * 12 + RX_Message[1];
     __atomic_store_n(&playedNotes[playedNotesIdx], RX_Message[0]=='P', __ATOMIC_RELAXED);
-  
-    // Suspend ourselves if we are master (no need to decode any messages)
-    // if (isMaster) {
-    //   DEBUG_PRINT("Suspending");
-    //   vTaskSuspend(NULL);
-    // }
   }
 }
 
 void transmitCANMessages(void* params){
   uint8_t msgOut[8];
   while(1){
-    // DEBUG_PRINT("msgOutQ waiting | sending:");
-    // print( (uint32_t)uxQueueMessagesWaiting(msgOutQ) );
-    // print( (uint32_t)uxQueueSpacesAvailable(msgOutQ) );
-
-    // Only transmit if we are master
     xQueueReceive(msgOutQ, msgOut, portMAX_DELAY);
     xSemaphoreTake(CAN_TX_Semaphore, portMAX_DELAY);
     DEBUG_PRINT("Tranmsitting CAN");
     CAN_TX(0x123, msgOut);
-    
-    // Suspend ourselves if we are not master
-    // if (isMaster==0) {
-    //   DEBUG_PRINT("Suspending");
-    //   vTaskSuspend(NULL);
-    // }
   }
 }
 
 void init_can_rx_decode(){
     DEBUG_PRINT("Initializing CAN RX Decode");
-    if (xTaskCreate(decodeCANMessages, "CAN Decoder", 256, NULL, 3, decodeCANMessage_handle) != pdPASS) {
+    if (xTaskCreate(decodeCANMessages, "CAN Decoder", 256, NULL, 2, NULL) != pdPASS) {
         DEBUG_PRINT("ERROR");
         print(xPortGetFreeHeapSize());
     }
@@ -216,7 +185,7 @@ void init_can_rx_decode(){
 
 void init_can_tx_decode(){
     DEBUG_PRINT("Initializing CAN TX Decode");
-    if (xTaskCreate(transmitCANMessages, "CAN Transmitter", 256, NULL, 4, transmitCANMessage_handle) != pdPASS) {
+    if (xTaskCreate(transmitCANMessages, "CAN Transmitter", 256, NULL, 3, NULL) != pdPASS) {
         DEBUG_PRINT("ERROR");
         print(xPortGetFreeHeapSize());
     }
