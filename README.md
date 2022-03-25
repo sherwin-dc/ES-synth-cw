@@ -65,9 +65,9 @@ The DMA for ADC has a variable sample rate which is implemented for pitch bend. 
 
 ### Reading keypresses
 
-The `scanKeysTask` task reads the GPIO digital pins (C0 - C3) and determine the state of the keys and knobs on the module. It also writes to the GPIO pins (RA0 - RA2) which allow different "rows" to be read from the key matrix. It also decodes the rotation of the knob by a state transition table. The task is ran with 20ms sample rate such that transient states of the knobs can be captured in most use cases.
+The `scanKeysTask` task reads the GPIO digital pins (C0 - C3) and determine the state of the keys and knobs on the module. It also writes to the GPIO pins (RA0 - RA2) which allow different "rows" to be read from the key matrix. It also decodes the rotation of the knob by a state transition table. The task is ran with 20ms sample rate such that transient states of the knobs can be captured.
 
-As state `01` and `10` of the knob are between detents of the knobs, it is assumed that the next state must be the next detent in the same rotation direction. Hence the transition table below is adopted instead of that stated in the lab instruction. With such transition table, the corresponding data is only increment or decrement by one for every detent. Although transitions cannot be correctly detected when the knobs are rotated quickly, it was decided that it is sufficient most of the time.
+As state `01` and `10` of the knob are between detents of the knobs, it is assumed that the next state must be the next detent in the same rotation direction. Hence the transition table below is adopted instead of that stated in the lab instruction. With such transition table, the corresponding data only increment or decrement by one for every detent. Although transitions cannot be correctly detected when the knobs are rotated quickly, it was sufficient for most use cases.
 
 | Previous {B,A} | Current {B,A} | Rotation Variable |
 | --- | --- | --- |
