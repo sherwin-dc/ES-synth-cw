@@ -41,7 +41,6 @@ The video can be found [here](https://imperiallondon-my.sharepoint.com/:v:/g/per
 STM32Cube is used instead of the STM32duino framework to exploit the functionality of the STM32 board such as DMA and reading ADC values with 12-bit resolution. HAL functions are called directly.
 
 ## Tasks Performed by System
-*talks about freeRTOS?*
 
 DMA (Direct Memory Access) allows direct read/write to the memory. Some tasks were implemented using the DMA to reduce the load of the processor, as it was observed that the processor does not have sufficient capacity to run all the tasks in parallel. DMA is connected to the DAC and ADC directly to read and write from the analog pins on the board.
 
@@ -61,7 +60,7 @@ As `scanKeysTask` runs with a much higher frequency, it is assigned with a highe
 
 On the other hand, the tasks decoding (`decodeCANMessages`) and transmitting (`transmitCANMessages`) CAN messages are not run at set intervals. Rather, they attempt to read values from FreeRTOS queues / check if semaphores are available. If the queues are empty or the semaphores are unavailable, the tasks block (yield to other tasks) until there are elements to be read in the queue, or the semaphores become available. Their priority was determined as lower than `scanKeysTask`, as it is unacceptatble to miss a user's keypress, but higher than `updateLCD`. To avoid having two tasks with the same priority, the priority for `transmitCANMessages` was arbitrarily set higher than `decodeCANMessages`.
 
-The DMA for ADC has a variable sample rate which is implemented for pitch bend. Please refer [here](#scankeystask) for implementation details.
+The DMA for ADC has a variable sample rate which is implemented for pitch bend. 
 
 ### Reading keypresses
 
@@ -86,7 +85,7 @@ The `updateLCD` task reads the state of the keys, knobs, joystick and master/sla
 
 Data corresponding to each knob are printed on a specific coordinate on the display such that they are displayed on top of the knobs for intuitive operation.
 
-*insert image*
+![Screenshot of LCD display](images/screenshot.png)
 
 ### sampleSound (interrupt)
 
@@ -124,9 +123,75 @@ When a CAN message is recieved, it triggers the `CAN_RX_ISR` interrupt, which pu
 
 When a CAN message is to be transmitted, it needs to be written to a Transmit Mailbox in the CAN peripheral on the STM32. If the board is a sender, messages are queued for transmission using a FreeRTOS queue when keys are pressed or released in `scanKeysTask`. The state of the Transmit Mailboxes is tracked using a semaphore, which is taken when CAN messages are received from the transmission queue in the `transmitCANMessages` task, and given when `CAN_TX_ISR` is called in response to the CAN hardware reporting a Transmit Mailbox becoming free.
 
-## Critical Instant Analysis of Scheduler
+### Debug tasks and functions
+
+To aid in development, several extra functions were created to aid in testing and debugging. 
+
+Level 2 stack checking was enabled with the appropriate callback function to warn when a stack overflow occured.
+
+The UART was used to print debug messages and values, which can be disabled through a compile flag. This was later switched to the USART module to utilise higher baud rates (for sound recording and transmission).
+
+A separate task was created to gather runtime statistics such as stack usage and CPU utilisation information from each task. This was supported by a hardware timer to provide timing statistics.
+
+Another timer was used to perform manual timing of code.
+
 ## Quantification of Total CPU Utilisation
 
+The CPU utilisation is measured with the help of FreeRTOS functions that gets information on each task. A separate task had been created for this purpose that had been modelled after `vTaskGetRunTimeStats()`. Definitions have been provided for `portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()` and `portGET_RUN_TIME_COUNTER_VALUE()` as per FreeRTOS documentation to allow the kernel to access the value of timer 2, which has a 32-bit counter. This timer had been set to 2000 Hz such that the counter value increases every 0.5 ms.
+
+The task had been set to run every 10s, and print out the total ticks (timer 2 counter value), as well as the cumulative runtime for each task. The stack high mark shows how close each function was to a stack overflow (smaller value being closer).
+
+```
+///////////STATS/////////␀Total run time (0.5 ms):␀120002
+Runtime stats␀␀␀
+Run time (ticks):␀148
+Stack high mark:␀228
+IDLE␀␀␀␀␀␀␀␀␀␀␀␀
+Run time (ticks):␀45165
+Stack high mark:␀108
+Detect keys␀␀␀␀␀
+Run time (ticks):␀0
+Stack high mark:␀464
+Refresh LCD␀␀␀␀␀
+Run time (ticks):␀74687
+Stack high mark:␀337
+Tmr Svc␀␀␀␀␀␀␀␀␀
+Run time (ticks):␀0
+Stack high mark:␀221
+CAN Decoder␀␀␀␀␀
+Run time (ticks):␀0
+Stack high mark:␀219
+CAN Transmitter␀
+Run time (ticks):␀0
+Stack high mark:␀221
+```
+
+Debug prints were disabled and the stats printed 60s after the microcontroller started were noted down. This was then repeated, but with a worst case usage where the piano had several keys pressed down in poly mode, maximum reverb and recording mode. The table below shows the CPU utilisation (The 'Tmr Svc' task has been excluded):
+
+| FreeRTOS Task | CPU utilisation (%) - No Workload | CPU utilisation (%) - High Workload |
+| --- | --- | --- |
+| Runtime stats | 0.12 | 0.06 |
+| scanKeysTask | 0 | 0.06 |
+| updateLCD | 62.24 | 63.68 |
+| decodeCANMessages | 0 | 0 |
+| transmitCANMessages | 0 | 0 |
+| Idle | 37.64 | 36.18 |
+
+## Critical Instant Analysis of Scheduler and Tasks
+
+Each task was timed using timer 6. The timer was initally set to 200 Hz to increment its counter register every 0.5us. This register can then be set and read using HAL functions to provide a time reading. An initial value showed that the updateLCD task almost always ran for 200 counts (100ms). To get a better timer resolution, timer 6 has been changed to run at 500 kHz, whereby it would take 100ms to count from 0 to 50,000 (timer 6 has a 16 bit counter), and each counter increment represents 2us.
+
+An average of 32 iterations was taken for each task under no workload, high worload (multiple keys pressed) for both initialtion time and execution time. This was done while the scheduler was running, and any outliers were removed when calculating execution time as this indicated that a higher priority task had interrupted the task.
+
+ FreeRTOS Task | Initialtion Time (us) - No Worload | Initialtion Time (us) - High Worload | Execution time (us) - Low Workload | Execution time (us) - High Workload |
+| --- | --- | --- | --- | --- |
+| scanKeysTask | 19822.56 | 19820.63 | 59.19 | 59.19 |
+| updateLCD | 99824.94 | 99831.06 | 62191.38 | 62762.75 |
+| sampleSound (interrupt) | 13460.13 | 13460.06 | 476.06 | 954.00 |
+
+It can be concluded that even with a higher workload, the schedular is able to meet the requirements since scanKeysTask and updateLCD are always initiated under 20ms and 100ms respectively.  
+
+Note that sampleSound is called everytime half of the 600-element array that holds the discrete sound points is sent via DMA to the DAC. The array elements are sent out at a frequency of 22kHz, hence 300 elements would be sent out every 13636 us, which is close to the measured "initiation time" of sampleSound. The execution time also increases when multipe keys are pressed with polyphony and reverb enabled since more calculations need to be performed.
 
 ## Shared Data Structures
 

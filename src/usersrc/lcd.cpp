@@ -129,7 +129,7 @@ void update_lcd(void * params) {
   std::vector<std::string> notes = {"C","C#","D","D#","E","F","F#","G","G#","A","A#","B"};
   std::vector<std::string> sounds = {"SAW   ","POLY  ","CHORUS","LASER ","SINE  ","5     ","6     ","7     ","8     ","9     "};
   uint8_t recordingBlinking = 0;
-  uint8_t wasMaster = 1;
+  volatile uint8_t wasMaster = 1;
   while (1) {
     u8g2_SetFont(&u8g2, u8g2_font_smallsimple_tr); // Set font size
 
@@ -307,7 +307,16 @@ void init_lcd() {
   redraw_lcd(true);
 }
 
+void printlcd(const char * c) {
+  std::string s = std::string(c);
+  HAL_UART_Transmit(&huart2, (uint8_t*) s.c_str(), s.size(), 100);
+}
 void redraw_lcd(bool master) {
+
+  
+  // print LCD screen to terminal
+  // u8g2_WriteBufferXBM(&u8g2, printlcd);
+
   u8g2_ClearBuffer(&u8g2);
   u8g2_SetDrawColor(&u8g2, 2);
   // draw white keys

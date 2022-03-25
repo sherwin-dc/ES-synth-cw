@@ -32,7 +32,7 @@ extern "C" uint32_t GET_RUN_TIME_COUNTER_VALUE() {
 
 // Part copied from task.h/task.cpp
 void getRunTimeStats(void* params) {
-  const TickType_t xFrequency = 1000/portTICK_PERIOD_MS;
+  const TickType_t xFrequency = 10000/portTICK_PERIOD_MS;
   TickType_t xLastWakeTime = xTaskGetTickCount();
 
   TaskStatus_t *pxTaskStatusArray;
@@ -45,8 +45,11 @@ void getRunTimeStats(void* params) {
     pxTaskStatusArray = (TaskStatus_t *) pvPortMalloc( uxArraySize * sizeof( TaskStatus_t ) ); /*lint !e9079 All values returned by pvPortMalloc() have at least the alignment required by the MCU's stack and this allocation allocates a struct that has the alignment requirements of a pointer. */
     if (pxTaskStatusArray != NULL) {
         uxArraySize = uxTaskGetSystemState( pxTaskStatusArray, uxArraySize, &ulTotalRunTime );
-        DEBUG_PRINT("Total run time (0.5 ms):");
+
+        HAL_UART_Transmit(&huart2, (uint8_t*) "///////////STATS/////////", 26, 100);
+        HAL_UART_Transmit(&huart2, (uint8_t*) "Total run time (0.5 ms):", 25, 100);
         print(ulTotalRunTime);
+
 
         /* Create a human readable table from the binary data. */
           for( x = 0; x < uxArraySize; x++ )
@@ -55,9 +58,16 @@ void getRunTimeStats(void* params) {
               uint32_t ulRunTimeCounter = pxTaskStatusArray[x].ulRunTimeCounter;
               configSTACK_DEPTH_TYPE usStackHighWaterMark = pxTaskStatusArray[x].usStackHighWaterMark;	/* The minimum amount of stack space that has remained for the task since the task was created.  The closer this value is to zero the closer the task has come to overflowing its stack. */
 
-
+              
               HAL_UART_Transmit(&huart2, (uint8_t *) pcTaskName, 16, 100);
+              HAL_UART_Transmit(&huart2, (uint8_t*) "\nRun time (ticks):", 19, 100);
               print(ulRunTimeCounter);
+              // HAL_UART_Transmit(&huart2, (uint8_t*) "\nRun time (%):", 15, 100);
+              // char rtStr[10] = {0};
+              // float runTimePercent = 100.0 * (float) ulRunTimeCounter /  (float) ulTotalRunTime;
+              // sprintf(rtStr, "%.5f", runTimePercent);
+              // HAL_UART_Transmit(&huart2, (uint8_t*) rtStr, 10, 100);
+              HAL_UART_Transmit(&huart2, (uint8_t*) "Stack high mark:", 17, 100);
               print(usStackHighWaterMark);
           }
 

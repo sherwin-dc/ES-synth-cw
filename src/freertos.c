@@ -105,7 +105,7 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   // init_run_time_stats();
-  DEBUG_PRINT("Runtime stats Thread Started");
+  // DEBUG_PRINT("Runtime stats Thread Started");
   start_lcd_thread();
   DEBUG_PRINT("LCD Thread Started");
   init_keydetect();
