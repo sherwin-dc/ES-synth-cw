@@ -4,6 +4,7 @@
 - [Documentation of Music Synthesiser](#documentation-of-music-synthesiser)
   - [Table of Contents](#table-of-contents)
   - [Demonstration Video](#demonstration-video)
+  - [Binary](#binary)
   - [Tasks Performed by System](#tasks-performed-by-system)
     - [Reading keypresses](#reading-keypresses)
     - [Updating display](#updating-display)
@@ -11,6 +12,7 @@
     - [DMA for DAC (speaker)](#dma-for-dac-speaker)
     - [DMA for ADC (joystick)](#dma-for-adc-joystick)
     - [Handling CAN messages](#handling-can-messages)
+    - [Debug tasks and functions](#debug-tasks-and-functions)
   - [Critical Instant Analysis of Scheduler](#critical-instant-analysis-of-scheduler)
   - [Quantification of Total CPU Utilisation](#quantification-of-total-cpu-utilisation)
   - [Shared Data Structures](#shared-data-structures)
@@ -39,6 +41,10 @@ The following video showcases the functionality of the music synthesizer and hig
 The video can be found [here](https://imperiallondon-my.sharepoint.com/:v:/g/personal/ejh19_ic_ac_uk/EYxDO2k4VvpGo4vONZREO3gB_bmMcaWnX2-DTccWO1V3EA?e=30DC51)
 
 STM32Cube is used instead of the STM32duino framework to exploit the functionality of the STM32 board such as DMA and reading ADC values with 12-bit resolution. HAL functions are called directly.
+
+## Binary
+
+The binary can be found at [.pio/build/nucleo_l432kc/](.pio/build/nucleo_l432kc/firmware.elf).
 
 ## Tasks Performed by System
 
