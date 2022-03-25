@@ -41,7 +41,7 @@ The video can be found [here](https://imperiallondon-my.sharepoint.com/:v:/g/per
 STM32Cube is used instead of the STM32duino framework to exploit the functionality of the STM32 board such as DMA and reading ADC values with 12-bit resolution. HAL functions are called directly.
 
 ## Tasks Performed by System
-*talks about freeRTOS?*
+For each task to run with a different initiation interval, tasks are separated on different threads managed by FreeRTOS. For tasks which are event triggered, an interrupt (ISR) is used to wait for the event. 
 
 DMA (Direct Memory Access) allows direct read/write to the memory. Some tasks were implemented using the DMA to reduce the load of the processor, as it was observed that the processor does not have sufficient capacity to run all the tasks in parallel. DMA is connected to the DAC and ADC directly to read and write from the analog pins on the board.
 
@@ -51,11 +51,11 @@ Below table shows an overview of the tasks that are performed and their correspo
 | --- | --- | --- |
 | scanKeysTask | 20 | 4 |
 | updateLCD | 100 | 1 |
-| decodeCANMessages | *?* | 2 |
-| transmitCANMessages | *?* | 3 |
-| DMA for ADC | NaN | (DMA) |
-| DMA for DAC | NaN  | (DMA) |
-|sampleSound| 12.9 | (interrupt) |
+| sampleSound | 12.9 | (interrupt) |
+| decodeCANMessages | nil | 2 |
+| transmitCANMessages | nil | 3 |
+| DMA for ADC | nil | (DMA) |
+| DMA for DAC | nil  | (DMA) |
 
 As `scanKeysTask` runs with a much higher frequency, it is assigned with a higher priority number compared to `updateLCD`. 
 
@@ -86,7 +86,7 @@ The `updateLCD` task reads the state of the keys, knobs, joystick and master/sla
 
 Data corresponding to each knob are printed on a specific coordinate on the display such that they are displayed on top of the knobs for intuitive operation.
 
-*insert image*
+![image](images/image_display.jpg)
 
 ### sampleSound (interrupt)
 
@@ -195,15 +195,15 @@ This sound profile is identical to the standard sawtooth sound profile, except t
 
 2. #### Chorus
 
-The chorus sound profile gives the piano a "richer" sound. Chorus still uses sawtooth waveforms to produce different frequencies, however a note no longer consists of a single sawtooth waveform. Instead, each note consists of three sawtooth waveforms of slightly different frequencies. This produces a very pleasent sound profile and makes the piano sound like a choir.
+The `chorus` sound profile gives the piano a "richer" sound. Chorus still uses sawtooth waveforms to produce different frequencies, however a note no longer consists of a single sawtooth waveform. Instead, each note consists of three sawtooth waveforms of slightly different frequencies. This produces a very pleasent sound profile and makes the piano sound like a choir.
 
 3. #### Laser
 
-The *Laser* sound profile is similar to the chorus sound profile, but now every note consists of 5 sawtooth waveforms of slightly different frequencies. The sound profile has been given the name "Laser" as pressing a note produces a sound similar to what laser blasters traditionally produce in movies. 
+The `Laser` sound profile is similar to the chorus sound profile, but now every note consists of 5 sawtooth waveforms of slightly different frequencies. The sound profile has been given the name "Laser" as pressing a note produces a sound similar to what laser blasters traditionally produce in movies. 
 
 4. #### Sine
 
-In the *Sine* sound profile the sawtooth waveforms have been replace by sine waves. Different frequency sine waves are produces by looping through an array, which holds one period of a sine wave, at different speeds. The produced sound is far softer than that produced by any of the other sound profiles.
+In the `Sine` sound profile the sawtooth waveforms have been replace by sine waves. Different frequency sine waves are produces by looping through an array, which holds one period of a sine wave, at different speeds. The produced sound is far softer than that produced by any of the other sound profiles.
 
 ### Reverb
 
